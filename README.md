@@ -49,31 +49,33 @@ SMA ──► [RF filter] ──► [BGA2869 LNA] ──► [LT5560 Mixer 1] ─
 
 ```
 SI5351-TCXO-Radio/
-├── README.md               # This file
-├── HARDWARE.md             # Detailed circuit description
-├── POWER.md                # Power budget and thermal analysis
-├── BOM.md                  # Bill of materials
-├── schematic/
-│   └── SCH_SI5351_TCXO_WithMixerAndFilters.pdf
-└── bom/
-    └── BOM_SI5351_TCXO_WithMixerAndFilters.xlsx
+├── README.md                                                                               # This file
+├── HARDWARE.md                                                                             # Detailed circuit description
+├── POWER.md                                                                                # Power budget and thermal analysis
+├── BOM.md                                                                                  # Bill of materials
+├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf                                # EasyEDA schematic export, 12 pages
+├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv # EasyEDA BOM export (CSV, UTF-16, tab-separated)
+├── 5560f.pdf                                                                               # LT5560 datasheet
+├── BGA2869.pdf                                                                             # BGA2869 datasheet
+├── polygon_illustration.html                                                               # AMS1084 tab-pad copper polygon visualiser (Danish)
+└── termisk_beregner.html                                                                   # AMS1084 thermal calculator (Danish)
 ```
 
 ## Quick Start
 
 1. Order PCB and components (see [BOM.md](BOM.md))
 2. Solder SMD components — start with ICs, then passives
-3. Connect 7–12 V DC to the power input connector (U103)
+3. Connect 7–12 V DC to the barrel jack (DC101, 5.5/2.0 mm)
 4. Connect an antenna to the SMA connector (RF301)
 5. Program MS5351M via I²C with CLK0, CLK1, CLK2 frequencies for your target band
-6. Connect a 4–8 Ω speaker to CN1201
+6. Connect a 4–8 Ω speaker to P1201
 
 ## Power Requirements
 
 | Rail | Regulator | Typical current | Purpose |
 |------|-----------|----------------|---------|
 | +3.3 V | AMS1117-3.3 (U101) | ~34 mA | MS5351M, TCXO |
-| +5 V | AMS1117-5.0 (U104) | ~97 mA | LNA, mixers, op-amp |
+| +5 V | AMS1117-5.0 (U103) | ~97 mA | LNA, mixers, op-amp |
 | +5V_P_AMP | AMS1084CM-5.0 (U102) | ~100–900 mA | PAM8406 audio amp |
 
 Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V recommended).
@@ -81,7 +83,7 @@ Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V 
 ## PCB Layout Notes
 
 - AMS1084CM-5.0 (U102) tab pad is **+5V_P_AMP** — not GND. Use an isolated copper polygon.
-- AMS1117-3.3 (U101) and AMS1117-5.0 (U104) tab pads are **Vout** — not GND.
+- AMS1117-3.3 (U101) and AMS1117-5.0 (U103) tab pads are **Vout** — not GND.
 - LT5560 exposed pad (EP, pin 9) is **PGND** — connect to GND plane with multiple vias.
 - Place decoupling capacitors as close as possible to each IC.
 - Use a ground plane on the bottom layer; connect to top layer GND pours via stitching vias.

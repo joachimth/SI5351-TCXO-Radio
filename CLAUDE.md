@@ -9,7 +9,7 @@ This file gives AI assistants context about the project, its conventions, and ho
 This is a **hardware documentation repository** for an open-source double-conversion (triple-conversion in practice) superheterodyne AM radio receiver. There is no firmware or software source code — the repository contains only:
 
 - Markdown documentation (design description, power analysis, BOM)
-- Schematic PDF (EasyEDA export, 12 pages, Ver3 2026-03-28)
+- Schematic PDF (EasyEDA export, 12 pages, Rev4 2026-03-28)
 - PDF datasheets for key ICs
 - Standalone HTML tools (interactive PCB thermal calculator and polygon visualiser)
 - MIT License
@@ -22,23 +22,21 @@ This is a **hardware documentation repository** for an open-source double-conver
 
 ```
 SI5351-TCXO-Radio/
-├── CLAUDE.md                                                                              # This file
-├── README.md                                                                              # Project overview, block diagram, quick-start
-├── HARDWARE.md                                                                            # Page-by-page circuit description (12 schematic pages)
-├── POWER.md                                                                               # Power budget, current budget, thermal analysis
-├── BOM.md                                                                                 # Bill of materials (LCSC part numbers, aligned with schematic Ver3)
-├── LICENSE                                                                                # MIT License (2026, Joachim Thirsbro)
-├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf                               # EasyEDA schematic export, 12 pages, V1.0
-├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28.csv   # EasyEDA BOM export (CSV, machine-readable, with JLCPCB/LCSC pricing)
-├── Netlist_SI5351_TCXO_WithMixerAndFilters_2026-03-28.enet                               # EasyEDA netlist export (JSON format, full component properties)
-├── SVG_SI5351_TCXO_WithMixerAndFilters_2026-03-28.zip..zip                               # EasyEDA SVG schematic export archive (double .zip extension as exported)
-├── 5560f.pdf                                                                              # LT5560 Active Mixer IC datasheet
-├── BGA2869.pdf                                                                            # BGA2869 MMIC LNA datasheet
-├── polygon_illustration.html                                                              # AMS1084 tab-pad copper polygon visualiser (Danish)
-└── termisk_beregner.html                                                                  # AMS1084 thermal calculator tool (Danish)
+├── CLAUDE.md                                                                                        # This file
+├── README.md                                                                                        # Project overview, block diagram, quick-start
+├── HARDWARE.md                                                                                      # Page-by-page circuit description (12 schematic pages)
+├── POWER.md                                                                                         # Power budget, current budget, thermal analysis
+├── BOM.md                                                                                           # Bill of materials (LCSC part numbers, aligned with schematic Rev4)
+├── LICENSE                                                                                          # MIT License (2026, Joachim Thirsbro)
+├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf                                         # EasyEDA schematic export, 12 pages
+├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv         # EasyEDA BOM export (CSV, UTF-16, tab-separated, JLCPCB/LCSC pricing)
+├── 5560f.pdf                                                                                        # LT5560 Active Mixer IC datasheet
+├── BGA2869.pdf                                                                                      # BGA2869 MMIC LNA datasheet
+├── polygon_illustration.html                                                                        # AMS1084 tab-pad copper polygon visualiser (Danish)
+└── termisk_beregner.html                                                                            # AMS1084 thermal calculator tool (Danish)
 ```
 
-**Note:** README.md contains an outdated repository structure showing `schematic/` and `bom/` subdirectories and a `.xlsx` BOM file — these do not exist. All files are in the repository root. The authoritative BOM is `BOM.md`; machine-readable exports are the `.csv` and `.enet` files above.
+**Note:** The Netlist (`.enet`) and SVG archive (`.zip..zip`) files from Ver3 are no longer present in the repository. The authoritative BOM is `BOM.md`; the machine-readable export is the `-Rev4.csv` file above.
 
 ---
 
@@ -94,7 +92,7 @@ Three independent regulated rails from a single DC input (VCC, 6–15 V):
 | Rail | Regulator | Package | Max current | Load | Typical current |
 |---|---|---|---|---|---|
 | +3.3 V | AMS1117-3.3 (U101) | SOT-223 | 800 mA | MS5351M, TCXO | ~34 mA |
-| +5 V | AMS1117-5.0 (U104) | SOT-223 | 800 mA | LNAs, mixers, op-amp | ~97 mA |
+| +5 V | AMS1117-5.0 (U103) | SOT-223 | 800 mA | LNAs, mixers, op-amp | ~97 mA |
 | +5V_P_AMP | AMS1084CM-5.0 (U102) | TO-263 | 5 A | PAM8406 audio amp only | 100–900 mA |
 
 **Recommended input voltage: 7–9 V DC.** Higher voltages cause more heat in the linear regulators.
@@ -112,7 +110,7 @@ All three voltage regulators and all three LT5560 mixers have non-GND exposed pa
 |---|---|---|---|
 | AMS1117-3.3 (U101) | Tab | **+3.3 V** (Vout) | Isolated polygon on +3.3 V net |
 | AMS1084CM-5.0 (U102) | Tab | **+5V_P_AMP** (Vout) | Isolated polygon on +5V_P_AMP net |
-| AMS1117-5.0 (U104) | Tab | **+5 V** (Vout) | Isolated polygon on +5 V net |
+| AMS1117-5.0 (U103) | Tab | **+5 V** (Vout) | Isolated polygon on +5 V net |
 | LT5560 ×3 (U501, U701, U1001) | EP (pin 9) | **PGND** | Connect to GND plane with vias |
 
 ### LT5560 supply voltage limit
@@ -134,11 +132,11 @@ All three voltage regulators and all three LT5560 mixers have non-GND exposed pa
 
 ## Schematic PDF — Page Index
 
-The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` was produced in EasyEDA (jsPDF export), 12 pages, V1.0, page size 688×231 pts (landscape A4-ish). Pages correspond 1:1 to the sections in HARDWARE.md:
+The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf` was produced in EasyEDA (jsPDF export), 12 pages, page size 688×231 pts (landscape A4-ish). Pages correspond 1:1 to the sections in HARDWARE.md:
 
 | Page | EasyEDA sheet name | Circuit block |
 |---|---|---|
-| 1 | *(unnamed)* | Power supply — U101, U102, U104, bulk capacitors |
+| 1 | *(unnamed)* | Power supply — U101, U102, U103, DC101, bulk tantalum caps |
 | 2 | SI5351_TCXO | Clock generator — U201 (MS5351M), X201 (TCXO), I²C pull-ups |
 | 3 | RF_FILTER | RF preselector — RF301, D301 (ESD), CT301, L301–L303, C301–C303, TP301 |
 | 4 | RF_LNA | First LNA — U401 (BGA2869) |
@@ -149,7 +147,7 @@ The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` was prod
 | 9 | BF_FILTER | Second IF filter — L901 (455 kHz ceramic BPF) |
 | 10 | IF_MIXER_455 | Third mixer / AM detector — U1001 (LT5560), U1002 (balun), L1001–L1003 |
 | 11 | OP_AMP_AUDIO | Audio op-amp — U1101 (LT6202) |
-| 12 | SPK_AMP | Audio power amp — U1201 (PAM8406), CN1201 (speaker) |
+| 12 | SPK_AMP | Audio power amp — U1201 (PAM8406), P1201 (speaker terminal) |
 
 **Net names as they appear in the schematic** (supplement to documentation):
 
@@ -175,22 +173,36 @@ The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` was prod
 
 ## Known BOM Discrepancies
 
-The discrepancies that existed in the original BOM were **resolved** in the BOM rewrite (commit `bf94574`, 2026-03-28), which aligned BOM.md with schematic Ver3. For the record, the three issues that were fixed:
+All previously known discrepancies from Ver3 were resolved and the BOM was fully realigned with schematic Rev4 (2026-03-28). The Rev4 changes introduced several intentional redesigns — these are not errors:
 
-| BOM entry (old) | Issue | Resolution |
-|---|---|---|
-| 47 nH inductors listed as L501, L701, **L802** | L802 did not exist in the schematic | Fixed: now correctly listed as **L501, L701, L1001** |
-| 12 nH inductors listed as L502, L503, L702, L703, **L803, L804** | L803, L804 did not exist in schematic | Fixed: now correctly listed as **L502, L503, L702, L703, L1002, L1003** |
-| "100 nF / 1000 V film cap" listed as designator **U1002** | U1002 is the WBC1-1TLC balun, not a cap | Fixed: film cap is now correctly listed as **C1206** |
+| Change | Old (Ver3) | New (Rev4) | Reason |
+|---|---|---|---|
+| Bulk decoupling | 100 nF 0805 arrays (many units) | 14× 100 µF tantalum CASE-B (Kyocera AVX TAJB107K006RNJ) | Better bulk bypassing, JLCPCB Basic |
+| 1 µF bypass (C505, C705, C1005) | Tantalum 3.2×1.6 mm, Extended | Samsung 0402 MLCC, Basic | Cost/size reduction |
+| 10 µF bypass (C1002, C1202–C1204) | Tantalum 3.2×1.6 mm, Extended | Samsung 0603 MLCC, Basic | Cost/size reduction |
+| C1206 | 100 nF / 1000 V film cap (TH radial) | 100 nF MLCC 0402 | Simpler, JLCPCB Basic |
+| R502 | 51 Ω ±1% Basic (interim) | 50 Ω ±0.1% film YAGEO C853312 | Restored precision termination |
+| R1103 | 5.1 kΩ (op-amp feedback) | 200 Ω (op-amp input) | Schematic change |
+| R1105 | 51 Ω (op-amp output) | 200 Ω (op-amp input) | Schematic change |
+| R1201 | yezhan 0 Ω Extended | UNI-ROYAL 0 Ω Basic | Basic substitute |
+| U103 (old) / DC101 (new) | JL212R-SMT-50002BP1 spring clamp | DC-005 2.0 barrel jack (C16214) | Standard connector |
+| CN1201 → P1201 | JL212V-SMT-35002BP1 spring clamp | WJ500V-5.08-2P screw terminal (C8465) | Easier speaker connection |
+| AMS1117-5.0 designator | U104 | U103 | Renumbered after DC101 freed the old U103 slot |
+| AMS1084CM-5.0 LCSC# | — (unlisted) | C56105 | Confirmed LCSC stock |
+| L302, L303 | Sunlord SWPA4010S18NT C24562 | muRata LQW15AN18NJ00D C82917 | Restored original muRata spec |
+| C703 | 1 nF (decoupling) | 4.7 pF (LO matching) | Schematic change in mixer 2 |
+| C1003 | 10 µF tantalum (decoupling) | 4.7 pF (LO matching) | Schematic change in mixer 3 |
+| 3.3 pF C302 | muRata GRM1555C1H3R3BA01D Extended | FH 0402CG3R3C500NT Basic | Basic substitute |
 
-The current BOM.md and the CSV export are consistent with the schematic. If new discrepancies are found, document them here and confirm with the project owner before correcting silently.
+If new discrepancies are found, document them here and confirm with the project owner before correcting silently.
 
 ---
 
 ## Component Reference Conventions
 
 - Designators follow schematic page numbering: U1xx = power supply, U2xx = clock, U4xx = RF LNA, U5xx = first mixer, etc.
-- Capacitors: Cxxx, inductors/filters: Lxxx, resistors: Rxxx, trimmers: CTxxx, diodes: Dxxx, test points: TPxxx, connectors: CNxxx, SMA: RFxxx, crystals: Xxxx
+- Capacitors: Cxxx, inductors/filters: Lxxx, resistors: Rxxx, trimmers: CTxxx, diodes: Dxxx, test points: TPxxx, connectors: Pxxx, SMA: RFxxx, crystals: Xxxx, DC jack: DCxxx
+- **Rev4 designator exceptions:** DC101 (barrel jack, was U103), P1201 (speaker screw terminal, was CN1201)
 - All ICs sourced from LCSC; part numbers in BOM.md include manufacturer PN and LCSC catalogue number
 
 ---
@@ -207,12 +219,10 @@ The current BOM.md and the CSV export are consistent with the schematic. If new 
 | LT6202IS5 | U1101 | SOT-23-5 | 5 V | High-speed op-amp, diff→SE conversion |
 | PAM8406DR | U1201 | SOIC-16 | 5V_P_AMP | Class-D 2×3 W stereo audio amplifier |
 | AMS1117-3.3 | U101 | SOT-223 | VCC in | 3.3 V LDO |
-| AMS1117-5.0 | U104 | SOT-223 | VCC in | 5 V LDO |
+| AMS1117-5.0 | U103 | SOT-223 | VCC in | 5 V LDO |
 | AMS1084CM-5.0 | U102 | TO-263 | VCC in | 5 V/5 A LDO (audio amp supply) |
-| JL212R-SMT-50002BP1 | U103 | SMD 2-pin spring clamp | — | DC power input terminal (5 mm pitch, 2-pin) |
-| JL212V-SMT-35002BP1 | CN1201 | SMD 2-pin spring clamp | — | Speaker output terminal (3.5 mm pitch, 2-pin) |
-
-**Note on connector designators:** U103 (DC input) uses a `U` prefix because EasyEDA assigned it a `U` designator in the schematic — this is unusual for a connector but is the as-designed designator. CN1201 (speaker) uses the conventional `CN` prefix.
+| DC-005 2.0 | DC101 | DC TH barrel jack 5.5/2.0 mm | — | DC power input connector |
+| WJ500V-5.08-2P | P1201 | TH screw terminal 2-pin 5.08 mm | — | Speaker output terminal |
 
 ---
 
@@ -279,10 +289,9 @@ Two standalone single-file HTML tools are included:
 
 ## Useful Background References
 
-- **Schematic** — `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` (in this repo). 12 pages, EasyEDA V1.0, last updated 2026-03-28. Use as ground truth for net names, component values, and connectivity. Note: contains open design questions as schematic annotations (Danish/English); these are the designer's own notes and do not indicate errors.
-- **BOM CSV** — `BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28.csv` (in this repo). Machine-readable EasyEDA BOM export. Contains LCSC part numbers, JLCPCB stock/pricing, footprint names, and all designators. Use as a cross-reference when verifying BOM.md against the schematic. The file is UTF-16 encoded with tab separators.
-- **Netlist** — `Netlist_SI5351_TCXO_WithMixerAndFilters_2026-03-28.enet` (in this repo). EasyEDA netlist in JSON format. Contains full component property dictionaries keyed by EasyEDA internal IDs (`gge##`). Useful for verifying component parameters and footprint assignments directly from the schematic tool.
-- **SVG archive** — `SVG_SI5351_TCXO_WithMixerAndFilters_2026-03-28.zip..zip` (in this repo). Compressed SVG export of the schematic sheets. Note the double `.zip` extension — this is how EasyEDA exported it. Extract twice to access the SVG files.
+- **Schematic** — `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf` (in this repo). 12 pages, EasyEDA export, last updated 2026-03-28. Use as ground truth for net names, component values, and connectivity. Note: may contain open design questions as schematic annotations (Danish/English); these are the designer's own notes and do not indicate errors.
+- **BOM CSV** — `BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv` (in this repo). Machine-readable EasyEDA BOM export. Contains LCSC part numbers, JLCPCB stock/pricing, footprint names, and all designators. Use as a cross-reference when verifying BOM.md against the schematic. The file is UTF-16 encoded with tab separators.
+- **Netlist and SVG archive** — not present in the repository (were available for Ver3, not exported for Rev4).
 - **LT5560 datasheet** — available in this repo as `5560f.pdf`. Key sections: absolute maximum ratings (5.3 V VCC), application circuits for low-frequency use (page 10–11), EN pin requirements.
 - **BGA2869 datasheet** — available in this repo as `BGA2869.pdf`. Key specs: gain 31.7 dB, NF 3.1 dB at 950 MHz, supply current 24 mA typical. Shown as "BGA2869,115" in EasyEDA schematic (the ",115" suffix is an EasyEDA internal variant tag, not a different component).
 - **MS5351M / SI5351** — not included in repo; refer to SiLabs SI5351 datasheet or Adafruit SI5351 resources for I²C programming details.

@@ -19,10 +19,10 @@ Three independent regulated rails are generated from a single DC input (VCC, 6�
 | Designator | Part | Output | Max current | Load |
 |---|---|---|---|---|
 | U101 | AMS1117-3.3 | +3.3 V | 800 mA | MS5351M, TCXO |
-| U104 | AMS1117-5.0 | +5 V | 800 mA | Signal chain |
+| U103 | AMS1117-5.0 | +5 V | 800 mA | Signal chain |
 | U102 | AMS1084CM-5.0 | +5V_P_AMP | 5 A | PAM8406 only |
 
-Bulk filtering is provided by 220 µF electrolytic capacitors (C101, C104, C107, C108, C109, C111, C113) combined with 100 nF ceramic decoupling (C102, C105, C106, C108, C110, C112).
+Bulk filtering is provided by fourteen 100 µF tantalum capacitors (Kyocera AVX TAJB107K006RNJ, CASE-B 3528) distributed across all power rails, combined with 100 nF ceramic decoupling capacitors. DC power input is via a standard 5.5/2.0 mm barrel jack (DC101).
 
 The PAM8406 amplifier is powered from a separate AMS1084CM-5.0 (U102) to isolate audio switching noise from the signal chain and to handle the high peak currents (up to ~900 mA at full output power) without overloading AMS1117.
 
@@ -111,7 +111,7 @@ U501 (LT5560EDD) is a low-power double-balanced active mixer from Analog Devices
 - **RF input:** U502 (WBC1-1TLC, 1:1 balun transformer) converts single-ended RF_OUT_LNA to differential for the IN+/IN− inputs. C502, C503 (1 nF) are DC blocking capacitors.
 - **IF output:** U503 (WBC1-1TLC, 1:1 balun) converts differential OUT+/OUT− back to single-ended. C507 (270 pF) and R502 (50 Ω) form the output matching/termination. C504 (100 nF) is supply decoupling for the output network.
 - **EN pin:** R501 (10 kΩ) pulls EN to +5 V, keeping the mixer enabled. The EN pin must not float.
-- **VCC supply:** C505 (1 µF tantalum) + C1012 (100 nF) decoupling on pin 7.
+- **VCC supply:** C505 (1 µF MLCC 0402) decoupling on pin 7.
 - **Exposed pad (EP, pin 9):** PGND — must be soldered to PCB GND plane.
 
 **Important:** LT5560 VCC maximum is 5.3 V. With +5 V from AMS1117-5.0, the margin is adequate under normal conditions. Verify that the +5 V rail does not exceed 5.3 V during transients.
@@ -222,11 +222,11 @@ U1201 (PAM8406DR) is a filterless class-D stereo amplifier delivering up to 2×3
 - Supply: +5V_P_AMP on VDD (pin 6), PVDDL (pin 4), and PVDDR (pin 13)
 - PGNDL (pin 2) and PGNDR (pin 15) are the power ground returns — keep these traces wide and short to the GND plane
 - MUTE# and SHDN# are controlled via the MUTE net (R1202, 10 kΩ pull-up)
-- C1206: AC coupling capacitor on the AUDIO_OUT input from the op-amp
-- C1202, C1203, C1204 (10 µF tantalum): Supply decoupling on PVDD rails
+- C1206 (100 nF MLCC 0402): AC coupling capacitor on the AUDIO_OUT input from the op-amp
+- C1202, C1203, C1204 (10 µF MLCC 0603): Supply decoupling on PVDD rails
 - C1205 (1 nF): VDD decoupling
 - R1201 (0 Ω): Jumper — can be used to disconnect audio input if needed
-- Output connector CN1201 (JL212V-SMT): Spring clamp terminal for speaker connection
+- Output connector P1201 (WJ500V-5.08-2P): Screw terminal for speaker connection
 
 **Tab pad:** PAM8406 in SOIC-16 has no exposed thermal pad. Thermal dissipation is via the supply and GND pins.
 
