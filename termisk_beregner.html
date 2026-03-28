@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMS1084 Termisk beregner</title>
+<style>
+body { font-family: sans-serif; font-size: 14px; margin: 0; padding: 16px; background: #f8f8f6; color: #1a1a18; }
+h2 { font-size: 16px; font-weight: 500; margin: 0 0 4px; }
+.sub { font-size: 12px; color: #666; margin-bottom: 16px; }
+.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+.ctrl { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.ctrl input[type=range] { flex: 1; }
+.ctrl span { min-width: 64px; font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.radio-row { display: flex; gap: 20px; margin-bottom: 4px; }
+.radio-row label { display: flex; align-items: center; gap: 6px; color: #333; cursor: pointer; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.result-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; background: #fff; }
+.result-card .lbl { font-size: 11px; color: #888; margin-bottom: 4px; }
+.result-card .val { font-size: 22px; font-weight: 500; }
+.result-card .hint { font-size: 11px; color: #aaa; margin-top: 2px; }
+.verdict { border-radius: 8px; padding: 13px 16px; font-size: 13px; line-height: 1.65; margin-bottom: 12px; }
+.ok   { background: #eaf3de; color: #3b6d11; }
+.warn { background: #faeeda; color: #854f0b; }
+.bad  { background: #fcebeb; color: #a32d2d; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font-weight: 500; text-align: left; padding: 8px 10px; border-bottom: 1px solid #ddd; }
+td { padding: 7px 10px; border-bottom: 1px solid #eee; color: #444; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.c-ok   { color: #3b6d11; font-weight: 500; }
+.c-warn { color: #854f0b; font-weight: 500; }
+.c-bad  { color: #a32d2d; font-weight: 500; }
+.section-label { font-size: 11px; font-weight: 500; color: #888; margin: 16px 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+
+<h2>AMS1084CM-5.0 — Termisk beregner</h2>
+<div class="sub">TO-263 pakke · θJC = 5°C/W · Tj maks = 125°C · Tamb = 25°C</div>
+
+<div class="card">
+  <div class="section-label">Juster parametre</div>
+
+  <label>Indgangsspænding VCC</label>
+  <div class="ctrl">
+    <input type="range" id="vin" min="6" max="15" value="12" step="0.5" oninput="calc()">
+    <span id="vin-lbl">12.0 V</span>
+  </div>
+
+  <label>Lydstrøm til PAM8406 (gennemsnitlig)</label>
+  <div class="ctrl">
+    <input type="range" id="iload" min="50" max="900" value="400" step="50" oninput="calc()">
+    <span id="iload-lbl">400 mA</span>
+  </div>
+
+  <label>Kobberlag</label>
+  <div class="radio-row">
+    <label><input type="radio" name="layers" value="1" onchange="calc()" checked> 1 lag (1oz)</label>
+    <label><input type="radio" name="layers" value="2" onchange="calc()"> 2 lag (top + bund via)</label>
+  </div>
+</div>
+
+<div class="result-grid">
+  <div class="result-card">
+    <div class="lbl">Effektafsætning i U102</div>
+    <div class="val" id="r-pdiss">—</div>
+    <div class="hint">P = (Vin − 5V) × I</div>
+  </div>
+  <div class="result-card">
+    <div class="lbl">Maks tilladt θJA</div>
+    <div class="val" id="r-rja">—</div>
+    <div class="hint">= 100°C / P</div>
+  </div>
+  <div class="result-card">
+    <div class="lbl">Nødvendigt kobberareal</div>
+    <div class="val" id="r-area">—</div>
+    <div class="hint" id="r-area-hint">—</div>
+  </div>
+</div>
+
+<div id="verdict" class="verdict ok">—</div>
+
+<div class="section-label">Referencetabel — 12V indgang, 1 kobberlag</div>
+<table>
+  <thead>
+    <tr>
+      <th>Lydstrøm</th>
+      <th>Typisk brug</th>
+      <th class="num">Effekt</th>
+      <th class="num">Areal</th>
+      <th class="num">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>100 mA</td><td>Lav baggrundslyd</td><td class="num">0.7 W</td><td class="num">~3 cm²</td><td class="num c-ok">✓ Let</td></tr>
+    <tr><td>200 mA</td><td>Moderat lytteniveau</td><td class="num">1.4 W</td><td class="num">~6 cm²</td><td class="num c-ok">✓ OK</td></tr>
+    <tr><td>400 mA</td><td>Normalt lytteniveau</td><td class="num">2.8 W</td><td class="num">~12 cm²</td><td class="num c-warn">⚠ Bemærk</td></tr>
+    <tr><td>600 mA</td><td>Høj lydstyrke</td><td class="num">4.2 W</td><td class="num">~18 cm²</td><td class="num c-warn">⚠ Stort</td></tr>
+    <tr><td>900 mA</td><td>Fuld udgang</td><td class="num">6.3 W</td><td class="num">~27 cm²</td><td class="num c-bad">✗ Upraktisk</td></tr>
+  </tbody>
+</table>
+
+<div class="verdict warn" style="margin-top:12px">
+  <strong>Tommelfingerregel:</strong> Uden kobberareal klarer TO-263 kun ~1.5W ved 25°C. Over det skal du bruge en solid polygon under og rundt om U102 med mindst 8–12 vias til bundlaget. Brug fyldte polygoner, ikke tynde spor. Overvejer du en buck step-down i stedet for AMS1084, sparer du al varmen.
+</div>
+
+<script>
+function calc() {
+  const vin    = parseFloat(document.getElementById('vin').value);
+  const iload  = parseFloat(document.getElementById('iload').value);
+  const layers = parseInt(document.querySelector('input[name=layers]:checked').value);
+
+  document.getElementById('vin-lbl').textContent   = vin.toFixed(1) + ' V';
+  document.getElementById('iload-lbl').textContent = iload + ' mA';
+
+  const vdrop      = vin - 5.0;
+  const pdiss      = vdrop * (iload / 1000);
+  const rja_needed = 100 / pdiss;           // (125-25)/P
+  const rja_factor = layers === 1 ? 40 : 22; // °C·cm²/W for 1oz copper
+  // θJA = θJC + θCA  →  rja_needed = 5 + rja_factor/area
+  // area = rja_factor / (rja_needed - 5)
+  let area = rja_factor / (rja_needed - 5);
+
+  document.getElementById('r-pdiss').textContent = pdiss.toFixed(1) + ' W';
+  document.getElementById('r-rja').textContent   = rja_needed.toFixed(0) + ' °C/W';
+
+  let areaText, hint, verdict, cls;
+
+  if (area <= 0 || area > 150) {
+    areaText = '> 100 cm²';
+    hint     = 'Ikke muligt lineært';
+    verdict  = '✗ Umuligt uden ekstern køling. Reducer Vin eller brug en buck step-down regulator.';
+    cls      = 'bad';
+  } else if (area > 25) {
+    areaText = Math.ceil(area) + ' cm²';
+    hint     = layers === 2 ? 'Top + bundlag via' : '1oz kobber';
+    verdict  = '⚠ ' + Math.ceil(area) + ' cm² er upraktisk på et standard PCB. Stærkt anbefalet at bruge en buck step-down regulator (fx MP2315, LM2596) i stedet for AMS1084 ved denne kombination af Vin og strøm.';
+    cls      = 'warn';
+  } else if (area > 10) {
+    areaText = Math.ceil(area) + ' cm²';
+    hint     = layers === 2 ? 'Top + bundlag via' : '1oz kobber';
+    verdict  = '⚠ ' + Math.ceil(area) + ' cm² kobber nødvendigt — muligt men kræver bevidst planlægning i layoutet. Brug en solid polygon under og rundt om U102 med mindst 8–12 vias til bundlaget.';
+    cls      = 'warn';
+  } else {
+    areaText = Math.ceil(area) + ' cm²';
+    hint     = layers === 2 ? 'Top + bundlag via' : '1oz kobber';
+    verdict  = '✓ ' + Math.ceil(area) + ' cm² kobber — let at realisere. En standard polygon direkte under U102\'s tab er tilstrækkelig.';
+    cls      = 'ok';
+  }
+
+  document.getElementById('r-area').textContent      = areaText;
+  document.getElementById('r-area-hint').textContent = hint;
+  document.getElementById('verdict').textContent     = verdict;
+  document.getElementById('verdict').className       = 'verdict ' + cls;
+}
+calc();
+</script>
+</body>
+</html>

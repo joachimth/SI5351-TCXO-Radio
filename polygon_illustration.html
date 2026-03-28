@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCB Kobberpolygon illustration</title>
+<style>
+body { font-family: sans-serif; font-size: 14px; margin: 0; padding: 16px; background: #f8f8f6; color: #1a1a18; }
+h2 { font-size: 16px; font-weight: 500; margin: 0 0 4px; }
+.sub { font-size: 12px; color: #666; margin-bottom: 20px; }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.view-label { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+svg { display: block; }
+.note { font-size: 12px; color: #555; line-height: 1.6; margin-top: 6px; }
+.legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 12px; color: #444; }
+.swatch { width: 18px; height: 12px; border-radius: 2px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
+.legend { margin-top: 16px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; }
+.legend-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.info-box { background: #faeeda; border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 13px; line-height: 1.65; color: #854f0b; }
+.scale-bar { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 11px; color: #888; }
+.scale-line { height: 2px; background: #888; width: 32px; }
+</style>
+</head>
+<body>
+
+<h2>Kobberpolygon til AMS1084CM-5.0 (TO-263)</h2>
+<div class="sub">Topview og tværsnit — 1 cm² reference, 2-lags PCB, 1oz kobber (35µm)</div>
+
+<div class="views">
+
+<!-- TOP VIEW -->
+<div>
+  <div class="view-label">Toplag (rød kobber)</div>
+  <svg width="100%" viewBox="0 0 280 300">
+
+    <!-- PCB baggrund -->
+    <rect x="10" y="10" width="260" height="280" rx="6" fill="#2d6a2d" opacity="0.15"/>
+    <rect x="10" y="10" width="260" height="280" rx="6" fill="none" stroke="#2d6a2d" stroke-width="1" opacity="0.4"/>
+
+    <!-- 1cm² reference kvadrat (10mm × 10mm skaleret) -->
+    <!-- Skala: 1mm = 10px, så 10mm = 100px, 12mm = 120px -->
+
+    <!-- Kobberpolygon toplaget: 12×12mm = 120×120px, centreret -->
+    <rect x="80" y="80" width="120" height="120" rx="3" fill="#c8400a" opacity="0.85"/>
+
+    <!-- 1cm² reference markering -->
+    <rect x="90" y="90" width="100" height="100" rx="2" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>
+    <text x="140" y="145" text-anchor="middle" font-size="10" fill="#fff" font-weight="500" opacity="0.85">1 cm²</text>
+    <text x="140" y="157" text-anchor="middle" font-size="9" fill="#fff" opacity="0.7">10 × 10 mm</text>
+
+    <!-- TO-263 komponent footprint -->
+    <!-- Tab (stor pad) -->
+    <rect x="108" y="108" width="64" height="44" rx="2" fill="#e8a060" opacity="0.9"/>
+    <text x="140" y="134" text-anchor="middle" font-size="9" fill="#5a2500" font-weight="500">Tab (GND/heat)</text>
+
+    <!-- Pins (3 stk, under komponenten) -->
+    <rect x="108" y="156" width="14" height="18" rx="1" fill="#e8a060" opacity="0.8"/>
+    <rect x="133" y="156" width="14" height="18" rx="1" fill="#e8a060" opacity="0.8"/>
+    <rect x="158" y="156" width="14" height="18" rx="1" fill="#e8a060" opacity="0.8"/>
+    <text x="109" y="169" font-size="8" fill="#5a2500">1</text>
+    <text x="134" y="169" font-size="8" fill="#5a2500">2</text>
+    <text x="159" y="169" font-size="8" fill="#5a2500">3</text>
+
+    <!-- Komponent outline -->
+    <rect x="105" y="100" width="70" height="80" rx="3" fill="none" stroke="#aaa" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text x="140" y="98" text-anchor="middle" font-size="9" fill="#888">TO-263</text>
+
+    <!-- Vias (8 stk, fordelt i polygon) -->
+    <!-- Vias i top-området -->
+    <circle cx="100" cy="100" r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="120" cy="95"  r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="160" cy="95"  r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="180" cy="100" r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <!-- Vias i siderne -->
+    <circle cx="93"  cy="140" r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="187" cy="140" r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <!-- Vias i bund-området -->
+    <circle cx="100" cy="185" r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="180" cy="185" r="4" fill="#c8400a" stroke="#fff" stroke-width="1.5"/>
+
+    <!-- Via labels -->
+    <text x="140" y="238" text-anchor="middle" font-size="9" fill="#888">● = via til bundlag</text>
+
+    <!-- Dimensionspile -->
+    <!-- Bredde -->
+    <line x1="80" y1="215" x2="200" y2="215" stroke="#555" stroke-width="0.8"/>
+    <line x1="80" y1="210" x2="80" y2="220" stroke="#555" stroke-width="0.8"/>
+    <line x1="200" y1="210" x2="200" y2="220" stroke="#555" stroke-width="0.8"/>
+    <text x="140" y="228" text-anchor="middle" font-size="10" fill="#555">12 mm</text>
+
+    <!-- Højde -->
+    <line x1="215" y1="80" x2="215" y2="200" stroke="#555" stroke-width="0.8"/>
+    <line x1="210" y1="80"  x2="220" y2="80"  stroke="#555" stroke-width="0.8"/>
+    <line x1="210" y1="200" x2="220" y2="200" stroke="#555" stroke-width="0.8"/>
+    <text x="235" y="145" text-anchor="middle" font-size="10" fill="#555">12 mm</text>
+
+    <!-- Skala -->
+    <line x1="20" y1="270" x2="120" y2="270" stroke="#555" stroke-width="1.5"/>
+    <line x1="20" y1="265" x2="20" y2="275" stroke="#555" stroke-width="1"/>
+    <line x1="120" y1="265" x2="120" y2="275" stroke="#555" stroke-width="1"/>
+    <text x="70" y="285" text-anchor="middle" font-size="10" fill="#555">10 mm</text>
+
+  </svg>
+  <div class="scale-bar">
+    <div class="scale-line"></div>
+    <span>Hver prikket firkant = 1 cm²</span>
+  </div>
+</div>
+
+<!-- TVÆRSNIT -->
+<div>
+  <div class="view-label">Tværsnit (siden)</div>
+  <svg width="100%" viewBox="0 0 280 300">
+
+    <!-- PCB substrat -->
+    <rect x="20" y="150" width="240" height="40" fill="#d4a843" opacity="0.4"/>
+    <rect x="20" y="150" width="240" height="40" fill="none" stroke="#b8891e" stroke-width="0.8"/>
+    <text x="140" y="174" text-anchor="middle" font-size="10" fill="#7a5a10">FR4 substrat (1.6mm)</text>
+
+    <!-- Toplag kobber -->
+    <rect x="20" y="143" width="240" height="7" fill="#c8400a" opacity="0.85"/>
+    <text x="12" y="150" text-anchor="end" font-size="9" fill="#c8400a">Top</text>
+
+    <!-- Bundlag kobber -->
+    <rect x="20" y="190" width="240" height="7" fill="#c8400a" opacity="0.85"/>
+    <text x="12" y="197" text-anchor="end" font-size="9" fill="#c8400a">Bund</text>
+
+    <!-- Vias (4 stk synlige i tværsnit) -->
+    <rect x="70"  y="143" width="5" height="54" fill="#e87040" opacity="0.9"/>
+    <rect x="120" y="143" width="5" height="54" fill="#e87040" opacity="0.9"/>
+    <rect x="160" y="143" width="5" height="54" fill="#e87040" opacity="0.9"/>
+    <rect x="210" y="143" width="5" height="54" fill="#e87040" opacity="0.9"/>
+
+    <!-- Via labels -->
+    <text x="72"  y="132" text-anchor="middle" font-size="8" fill="#c8400a">via</text>
+    <text x="122" y="132" text-anchor="middle" font-size="8" fill="#c8400a">via</text>
+    <text x="162" y="132" text-anchor="middle" font-size="8" fill="#c8400a">via</text>
+    <text x="212" y="132" text-anchor="middle" font-size="8" fill="#c8400a">via</text>
+
+    <!-- TO-263 komponent -->
+    <!-- Krop -->
+    <rect x="90" y="100" width="100" height="43" rx="3" fill="#444" opacity="0.85"/>
+    <!-- Tab pad (loddet til toplaget) -->
+    <rect x="105" y="143" width="70" height="7" fill="#e8a060" opacity="0.95"/>
+    <text x="140" y="126" text-anchor="middle" font-size="10" fill="#fff">AMS1084</text>
+    <text x="140" y="139" text-anchor="middle" font-size="9" fill="#ccc">TO-263</text>
+
+    <!-- Tab label -->
+    <line x1="175" y1="146" x2="220" y2="120" stroke="#888" stroke-width="0.8"/>
+    <text x="222" y="118" font-size="9" fill="#666">Tab pad</text>
+
+    <!-- Varmepile (fra IC ned i kobber) -->
+    <line x1="125" y1="143" x2="125" y2="200" stroke="#e85d24" stroke-width="1.5" marker-end="url(#arr)" opacity="0.7"/>
+    <line x1="140" y1="143" x2="140" y2="200" stroke="#e85d24" stroke-width="1.5" marker-end="url(#arr)" opacity="0.7"/>
+    <line x1="155" y1="143" x2="155" y2="200" stroke="#e85d24" stroke-width="1.5" marker-end="url(#arr)" opacity="0.7"/>
+
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#e85d24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+
+    <!-- Varmeafledning til luft -->
+    <line x1="50"  y1="197" x2="50"  y2="240" stroke="#e85d24" stroke-width="1" opacity="0.4" stroke-dasharray="3 2"/>
+    <line x1="140" y1="197" x2="140" y2="240" stroke="#e85d24" stroke-width="1" opacity="0.4" stroke-dasharray="3 2"/>
+    <line x1="230" y1="197" x2="230" y2="240" stroke="#e85d24" stroke-width="1" opacity="0.4" stroke-dasharray="3 2"/>
+    <text x="140" y="255" text-anchor="middle" font-size="10" fill="#e85d24" opacity="0.7">Varme til omgivelserne</text>
+
+    <!-- Tykkelse annotations -->
+    <line x1="16" y1="143" x2="16" y2="150" stroke="#555" stroke-width="0.8"/>
+    <text x="8" y="148" text-anchor="middle" font-size="8" fill="#555">35µm</text>
+
+    <!-- Dimension kobberareal -->
+    <line x1="20" y1="268" x2="260" y2="268" stroke="#555" stroke-width="0.8"/>
+    <line x1="20" y1="263" x2="20" y2="273" stroke="#555" stroke-width="0.8"/>
+    <line x1="260" y1="263" x2="260" y2="273" stroke="#555" stroke-width="0.8"/>
+    <text x="140" y="282" text-anchor="middle" font-size="10" fill="#555">Kobberpolygon (top + bund = dobbelt effektiv flade)</text>
+
+  </svg>
+</div>
+
+</div>
+
+<!-- Legende -->
+<div class="legend">
+  <div class="legend-title">Forklaring</div>
+  <div class="legend-row"><div class="swatch" style="background:#c8400a"></div>Kobberpolygon (toplag og bundlag)</div>
+  <div class="legend-row"><div class="swatch" style="background:#e87040"></div>Vias — forbinder toplag til bundlag termisk og elektrisk</div>
+  <div class="legend-row"><div class="swatch" style="background:#d4a843; opacity:0.6"></div>FR4 PCB substrat</div>
+  <div class="legend-row"><div class="swatch" style="background:#e8a060"></div>TO-263 tab pad — loddes direkte til kobberpolygon</div>
+</div>
+
+<div class="info-box">
+  <strong>Praktiske tommelfingerregler:</strong><br>
+  · Polygon skal være minimum 1–2 mm større end komponenten på alle sider<br>
+  · Vias: minimum 0.3mm hul, 0.6mm ring — placer 8–12 stk jævnt fordelt<br>
+  · Vias bør sidde uden for komponentens tab-pad (EasyEDA fylder automatisk med vias hvis du sætter "via stitching")<br>
+  · Bundlaget skal også have en sammenhængende polygon — ikke bare fragmenter<br>
+  · 2 cm² på hvert lag = effektivt ~3.5 cm² pga. termisk kobling via substratet
+</div>
+
+</body>
+</html>
