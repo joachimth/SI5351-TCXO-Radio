@@ -1,10 +1,10 @@
 # SI5351-TCXO-Radio
 
-A double-conversion superheterodyne AM radio receiver built around the SI5351 clock generator and a 26 MHz TCXO reference. The design uses three LT5560 active mixers, two BGA2869 LNA stages, and a PAM8406 class-D audio amplifier — all on a single PCB.
+A triple-conversion superheterodyne AM radio receiver built around the SI5351 clock generator and a 26 MHz TCXO reference. The design uses three LT5560 active mixers, two BGA2869 LNA stages, and a PAM8406 class-D audio amplifier — all on a single PCB.
 
 ## Overview
 
-The receiver follows a classic double-conversion topology:
+The receiver follows a triple-conversion topology:
 
 ```
 Antenna → RF filter → LNA → Mixer 1 → 10.7 MHz filter → Mixer 2 → 455 kHz filter → LNA → Mixer 3 → Op-amp → Speaker amp
@@ -82,7 +82,7 @@ SI5351-TCXO-Radio/
 | Rail | Regulator | Typical current | Purpose |
 |------|-----------|----------------|---------|
 | +3.3 V | AMS1117-3.3 (U101) | ~34 mA | MS5351M, TCXO |
-| +5 V | AMS1117-5.0 (U104) | ~97 mA | LNA, mixers, op-amp |
+| +5 V | AMS1117-5.0 (U103) | ~97 mA | LNA, mixers, op-amp |
 | +5V_P_AMP | AMS1084CM-5.0 (U102) | ~100–900 mA | PAM8406 audio amp |
 
 Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V recommended).
@@ -90,7 +90,7 @@ Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V 
 ## PCB Layout Notes
 
 - AMS1084CM-5.0 (U102) tab pad is **+5V_P_AMP** — not GND. Use an isolated copper polygon.
-- AMS1117-3.3 (U101) and AMS1117-5.0 (U104) tab pads are **Vout** — not GND.
+- AMS1117-3.3 (U101) and AMS1117-5.0 (U103) tab pads are **Vout** — not GND.
 - LT5560 exposed pad (EP, pin 9) is **PGND** — connect to GND plane with multiple vias.
 - Place decoupling capacitors as close as possible to each IC.
 - Use a ground plane on the bottom layer; connect to top layer GND pours via stitching vias.
