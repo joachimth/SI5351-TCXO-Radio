@@ -9,6 +9,7 @@ This file gives AI assistants context about the project, its conventions, and ho
 This is a **hardware documentation repository** for an open-source double-conversion (triple-conversion in practice) superheterodyne AM radio receiver. There is no firmware or software source code — the repository contains only:
 
 - Markdown documentation (design description, power analysis, BOM)
+- Schematic PDF (EasyEDA export, 12 pages, Ver3 2026-03-28)
 - PDF datasheets for key ICs
 - Standalone HTML tools (interactive PCB thermal calculator and polygon visualiser)
 - MIT License
@@ -21,19 +22,20 @@ This is a **hardware documentation repository** for an open-source double-conver
 
 ```
 SI5351-TCXO-Radio/
-├── CLAUDE.md                    # This file
-├── README.md                    # Project overview, block diagram, quick-start
-├── HARDWARE.md                  # Page-by-page circuit description (12 schematic pages)
-├── POWER.md                     # Power budget, current budget, thermal analysis
-├── BOM.md                       # Bill of materials (47 component groups, LCSC part numbers)
-├── LICENSE                      # MIT License (2026, Joachim Thirsbro)
-├── 5560f.pdf                    # LT5560 Active Mixer IC datasheet
-├── BGA2869.pdf                  # BGA2869 MMIC LNA datasheet
-├── polygon_illustration.html    # AMS1084 tab-pad copper polygon visualiser (Danish)
-└── termisk_beregner.html        # AMS1084 thermal calculator tool (Danish)
+├── CLAUDE.md                                              # This file
+├── README.md                                              # Project overview, block diagram, quick-start
+├── HARDWARE.md                                            # Page-by-page circuit description (12 schematic pages)
+├── POWER.md                                               # Power budget, current budget, thermal analysis
+├── BOM.md                                                 # Bill of materials (47 component groups, LCSC part numbers)
+├── LICENSE                                                # MIT License (2026, Joachim Thirsbro)
+├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf  # EasyEDA schematic export, 12 pages, V1.0
+├── 5560f.pdf                                              # LT5560 Active Mixer IC datasheet
+├── BGA2869.pdf                                            # BGA2869 MMIC LNA datasheet
+├── polygon_illustration.html                              # AMS1084 tab-pad copper polygon visualiser (Danish)
+└── termisk_beregner.html                                  # AMS1084 thermal calculator tool (Danish)
 ```
 
-Note: The schematic PDF and BOM XLSX referenced in README.md (`SCH_SI5351_TCXO_WithMixerAndFilters.pdf`, `BOM_SI5351_TCXO_WithMixerAndFilters.xlsx`) are **not present** in the repository.
+Note: The BOM XLSX (`BOM_SI5351_TCXO_WithMixerAndFilters.xlsx`) referenced in README.md is **not present** in the repository.
 
 ---
 
@@ -127,6 +129,59 @@ All three voltage regulators and all three LT5560 mixers have non-GND exposed pa
 
 ---
 
+## Schematic PDF — Page Index
+
+The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` was produced in EasyEDA (jsPDF export), 12 pages, V1.0, page size 688×231 pts (landscape A4-ish). Pages correspond 1:1 to the sections in HARDWARE.md:
+
+| Page | EasyEDA sheet name | Circuit block |
+|---|---|---|
+| 1 | *(unnamed)* | Power supply — U101, U102, U104, bulk capacitors |
+| 2 | SI5351_TCXO | Clock generator — U201 (MS5351M), X201 (TCXO), I²C pull-ups |
+| 3 | RF_FILTER | RF preselector — RF301, D301 (ESD), CT301, L301–L303, C301–C303, TP301 |
+| 4 | RF_LNA | First LNA — U401 (BGA2869) |
+| 5 | RF_MIXER_IF | First mixer — U501 (LT5560), U502/U503 (baluns), L501–L503 |
+| 6 | IF1_FILTER | First IF filter — L601 (10.7 MHz ceramic BPF) |
+| 7 | *(IF2 mixer)* | Second mixer — U701 (LT5560), U702/U703 (baluns), L701–L703 |
+| 8 | IF_LNA | IF LNA — U801 (BGA2869) |
+| 9 | BF_FILTER | Second IF filter — L901 (455 kHz ceramic BPF) |
+| 10 | IF_MIXER_455 | Third mixer / AM detector — U1001 (LT5560), U1002 (balun), L1001–L1003 |
+| 11 | OP_AMP_AUDIO | Audio op-amp — U1101 (LT6202) |
+| 12 | SPK_AMP | Audio power amp — U1201 (PAM8406), CN1201 (speaker) |
+
+**Net names as they appear in the schematic** (supplement to documentation):
+
+| Net | Connects |
+|---|---|
+| `RF_ANT` | SMA RF301 → ESD diode D301 → RF preselector |
+| `RF_IN_LNA` | RF preselector output → U401 RF input |
+| `RF_OUT_LNA` | U401 output → U502 (first mixer input balun) |
+| `IF_IN_BP_FILTER` | U503 (first mixer output) → L601 input |
+| `IF_OUT_BP_FILTER` | L601 output → U702 (second mixer input balun) |
+| `IF_MIXER_OUT` | U703 output → U801 (IF LNA) |
+| `IF_LNA_OUT` | U801 output → L901 (455 kHz filter) |
+| `BP_FILTER_OUT` | L901 output → U1002 (third mixer input balun) |
+| `AUDIO_MIXER_OUT_POS` | U1001 OUT+ → R1002 pull-up + U1101 IN+ |
+| `AUDIO_MIXER_OUT_NEG` | U1001 OUT− → R1003 pull-up + U1101 IN− |
+| `AUDIO_OUT` | U1101 output → C1206 → U1201 input |
+| `EN_MIXER01` | R501 (10 kΩ to +5 V) → U501 EN pin |
+| `EN_MIXER02` | R701 (10 kΩ to +5 V) → U701 EN pin; also used on U1001 EN |
+| `MUTE` | R1202 (10 kΩ to +5V_P_AMP) → U1201 MUTE# and SHDN# |
+| `SDA_3V` / `SCL_3V` | I²C bus on +3.3 V domain; pull-ups R201, R202 (2 kΩ) |
+
+---
+
+## Known BOM Discrepancies
+
+The following discrepancies were identified by comparing BOM.md against the schematic PDF. **Do not correct these silently** — confirm with the project owner first.
+
+| BOM entry | Issue | Schematic reality |
+|---|---|---|
+| Row 22: 47 nH inductors listed as L501, L701, **L802** | L802 does not exist in the schematic | Third mixer LO inductor is **L1001** |
+| Row 23: 12 nH inductors listed as L502, L503, L702, L703, **L803, L804** | L803, L804 do not exist in schematic | Third mixer balun inductors are **L1002, L1003** |
+| Row 45: "100 nF / 1000 V film cap" listed as designator **U1002** | U1002 is the WBC1-1TLC balun (row 43) — a passive, not a cap | Film cap is likely **C1206** (speaker amp output, page 12) |
+
+---
+
 ## Component Reference Conventions
 
 - Designators follow schematic page numbering: U1xx = power supply, U2xx = clock, U4xx = RF LNA, U5xx = first mixer, etc.
@@ -208,14 +263,15 @@ Two standalone single-file HTML tools are included:
 ### Do not do
 - Create or modify the HTML tools (they are complete and language-specific)
 - Add firmware, driver, or software code unless the project scope changes
-- Infer or invent schematic details not present in the existing documentation
-- Assume the schematic PDF is available — it is not in this repository
+- Infer or invent schematic details — the schematic PDF is now available; use it as ground truth
+- Silently "fix" the BOM designator discrepancies listed above without confirming with the owner
 
 ---
 
 ## Useful Background References
 
+- **Schematic** — `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` (in this repo). 12 pages, EasyEDA V1.0, last updated 2026-03-28. Use as ground truth for net names, component values, and connectivity. Note: contains open design questions as schematic annotations (Danish/English); these are the designer's own notes and do not indicate errors.
 - **LT5560 datasheet** — available in this repo as `5560f.pdf`. Key sections: absolute maximum ratings (5.3 V VCC), application circuits for low-frequency use (page 10–11), EN pin requirements.
-- **BGA2869 datasheet** — available in this repo as `BGA2869.pdf`. Key specs: gain 31.7 dB, NF 3.1 dB at 950 MHz, supply current 24 mA typical.
+- **BGA2869 datasheet** — available in this repo as `BGA2869.pdf`. Key specs: gain 31.7 dB, NF 3.1 dB at 950 MHz, supply current 24 mA typical. Shown as "BGA2869,115" in EasyEDA schematic (the ",115" suffix is an EasyEDA internal variant tag, not a different component).
 - **MS5351M / SI5351** — not included in repo; refer to SiLabs SI5351 datasheet or Adafruit SI5351 resources for I²C programming details.
 - **AMS1084 / AMS1117** — not included in repo; key fact: tab pad = Vout on both families.
