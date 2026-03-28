@@ -49,14 +49,22 @@ SMA ──► [RF filter] ──► [BGA2869 LNA] ──► [LT5560 Mixer 1] ─
 
 ```
 SI5351-TCXO-Radio/
-├── README.md               # This file
-├── HARDWARE.md             # Detailed circuit description
-├── POWER.md                # Power budget and thermal analysis
-├── BOM.md                  # Bill of materials
-├── schematic/
-│   └── SCH_SI5351_TCXO_WithMixerAndFilters.pdf
-└── bom/
-    └── BOM_SI5351_TCXO_WithMixerAndFilters.xlsx
+├── README.md                                                                                        # This file
+├── HARDWARE.md                                                                                      # Detailed circuit description (12 schematic pages)
+├── POWER.md                                                                                         # Power budget and thermal analysis
+├── BOM.md                                                                                           # Bill of materials (LCSC part numbers)
+├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf                                         # EasyEDA schematic export, 12 pages
+├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv         # EasyEDA BOM export (CSV)
+├── 5560f.pdf                                                                                        # LT5560 datasheet
+├── BGA2869.pdf                                                                                      # BGA2869 datasheet
+├── SI5351.pdf                                                                                       # SI5351A PLL datasheet
+├── LT6202.pdf                                                                                       # LT6202 op-amp datasheet
+├── PAM8406.pdf                                                                                      # PAM8406 audio amp datasheet
+├── AMS1117.pdf                                                                                      # AMS1117 LDO datasheet
+├── AMS1084.pdf                                                                                      # AMS1084 LDO datasheet
+├── WBC1-1TLC.pdf                                                                                    # WBC1-1TLC balun datasheet
+├── polygon_illustration.html                                                                        # AMS1084 copper polygon visualiser (Danish)
+└── termisk_beregner.html                                                                            # AMS1084 thermal calculator (Danish)
 ```
 
 ## Quick Start

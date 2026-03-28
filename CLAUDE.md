@@ -9,7 +9,7 @@ This file gives AI assistants context about the project, its conventions, and ho
 This is a **hardware documentation repository** for an open-source double-conversion (triple-conversion in practice) superheterodyne AM radio receiver. There is no firmware or software source code — the repository contains only:
 
 - Markdown documentation (design description, power analysis, BOM)
-- Schematic PDF (EasyEDA export, 12 pages, Ver3 2026-03-28)
+- Schematic PDF (EasyEDA export, 12 pages, Rev4 2026-03-28)
 - PDF datasheets for key ICs
 - Standalone HTML tools (interactive PCB thermal calculator and polygon visualiser)
 - MIT License
@@ -26,19 +26,23 @@ SI5351-TCXO-Radio/
 ├── README.md                                                                              # Project overview, block diagram, quick-start
 ├── HARDWARE.md                                                                            # Page-by-page circuit description (12 schematic pages)
 ├── POWER.md                                                                               # Power budget, current budget, thermal analysis
-├── BOM.md                                                                                 # Bill of materials (LCSC part numbers, aligned with schematic Ver3)
-├── LICENSE                                                                                # MIT License (2026, Joachim Thirsbro)
-├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf                               # EasyEDA schematic export, 12 pages, V1.0
-├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28.csv   # EasyEDA BOM export (CSV, machine-readable, with JLCPCB/LCSC pricing)
-├── Netlist_SI5351_TCXO_WithMixerAndFilters_2026-03-28.enet                               # EasyEDA netlist export (JSON format, full component properties)
-├── SVG_SI5351_TCXO_WithMixerAndFilters_2026-03-28.zip..zip                               # EasyEDA SVG schematic export archive (double .zip extension as exported)
-├── 5560f.pdf                                                                              # LT5560 Active Mixer IC datasheet
-├── BGA2869.pdf                                                                            # BGA2869 MMIC LNA datasheet
-├── polygon_illustration.html                                                              # AMS1084 tab-pad copper polygon visualiser (Danish)
-└── termisk_beregner.html                                                                  # AMS1084 thermal calculator tool (Danish)
+├── BOM.md                                                                                              # Bill of materials (LCSC part numbers, aligned with schematic Rev4)
+├── LICENSE                                                                                             # MIT License (2026, Joachim Thirsbro)
+├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf                                            # EasyEDA schematic export, 12 pages, Rev4
+├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv            # EasyEDA BOM export (CSV, machine-readable, with JLCPCB/LCSC pricing)
+├── 5560f.pdf                                                                                           # LT5560 Active Mixer IC datasheet
+├── BGA2869.pdf                                                                                         # BGA2869 MMIC LNA datasheet
+├── SI5351.pdf                                                                                          # SiLabs SI5351A PLL clock generator datasheet
+├── LT6202.pdf                                                                                          # LT6202 high-speed op-amp datasheet
+├── PAM8406.pdf                                                                                         # PAM8406 class-D audio amplifier datasheet
+├── AMS1117.pdf                                                                                         # AMS1117 LDO voltage regulator datasheet
+├── AMS1084.pdf                                                                                         # AMS1084CM LDO voltage regulator datasheet
+├── WBC1-1TLC.pdf                                                                                       # WBC1-1TLC wideband RF balun transformer datasheet
+├── polygon_illustration.html                                                                           # AMS1084 tab-pad copper polygon visualiser (Danish)
+└── termisk_beregner.html                                                                               # AMS1084 thermal calculator tool (Danish)
 ```
 
-**Note:** README.md contains an outdated repository structure showing `schematic/` and `bom/` subdirectories and a `.xlsx` BOM file — these do not exist. All files are in the repository root. The authoritative BOM is `BOM.md`; machine-readable exports are the `.csv` and `.enet` files above.
+**Note:** README.md contains an outdated repository structure showing `schematic/` and `bom/` subdirectories and a `.xlsx` BOM file — these do not exist. All files are in the repository root. The authoritative BOM is `BOM.md`; the machine-readable export is the `.csv` file above.
 
 ---
 
@@ -134,7 +138,7 @@ All three voltage regulators and all three LT5560 mixers have non-GND exposed pa
 
 ## Schematic PDF — Page Index
 
-The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` was produced in EasyEDA (jsPDF export), 12 pages, V1.0, page size 688×231 pts (landscape A4-ish). Pages correspond 1:1 to the sections in HARDWARE.md:
+The schematic `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf` was produced in EasyEDA (jsPDF export), 12 pages, Rev4, page size 688×231 pts (landscape A4-ish). Pages correspond 1:1 to the sections in HARDWARE.md:
 
 | Page | EasyEDA sheet name | Circuit block |
 |---|---|---|
@@ -279,11 +283,13 @@ Two standalone single-file HTML tools are included:
 
 ## Useful Background References
 
-- **Schematic** — `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28_Ver3.pdf` (in this repo). 12 pages, EasyEDA V1.0, last updated 2026-03-28. Use as ground truth for net names, component values, and connectivity. Note: contains open design questions as schematic annotations (Danish/English); these are the designer's own notes and do not indicate errors.
-- **BOM CSV** — `BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28.csv` (in this repo). Machine-readable EasyEDA BOM export. Contains LCSC part numbers, JLCPCB stock/pricing, footprint names, and all designators. Use as a cross-reference when verifying BOM.md against the schematic. The file is UTF-16 encoded with tab separators.
-- **Netlist** — `Netlist_SI5351_TCXO_WithMixerAndFilters_2026-03-28.enet` (in this repo). EasyEDA netlist in JSON format. Contains full component property dictionaries keyed by EasyEDA internal IDs (`gge##`). Useful for verifying component parameters and footprint assignments directly from the schematic tool.
-- **SVG archive** — `SVG_SI5351_TCXO_WithMixerAndFilters_2026-03-28.zip..zip` (in this repo). Compressed SVG export of the schematic sheets. Note the double `.zip` extension — this is how EasyEDA exported it. Extract twice to access the SVG files.
+- **Schematic** — `SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf` (in this repo). 12 pages, EasyEDA Rev4, last updated 2026-03-28. Use as ground truth for net names, component values, and connectivity. Note: contains open design questions as schematic annotations (Danish/English); these are the designer's own notes and do not indicate errors.
+- **BOM CSV** — `BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv` (in this repo). Machine-readable EasyEDA BOM export. Contains LCSC part numbers, JLCPCB stock/pricing, footprint names, and all designators. Use as a cross-reference when verifying BOM.md against the schematic. The file is UTF-16 encoded with tab separators.
 - **LT5560 datasheet** — available in this repo as `5560f.pdf`. Key sections: absolute maximum ratings (5.3 V VCC), application circuits for low-frequency use (page 10–11), EN pin requirements.
 - **BGA2869 datasheet** — available in this repo as `BGA2869.pdf`. Key specs: gain 31.7 dB, NF 3.1 dB at 950 MHz, supply current 24 mA typical. Shown as "BGA2869,115" in EasyEDA schematic (the ",115" suffix is an EasyEDA internal variant tag, not a different component).
-- **MS5351M / SI5351** — not included in repo; refer to SiLabs SI5351 datasheet or Adafruit SI5351 resources for I²C programming details.
-- **AMS1084 / AMS1117** — not included in repo; key fact: tab pad = Vout on both families.
+- **SI5351 datasheet** — available in this repo as `SI5351.pdf`. SiLabs SI5351A-B-GT; key sections: I²C register map, PLL configuration, CLK output settings.
+- **LT6202 datasheet** — available in this repo as `LT6202.pdf`. High-speed op-amp (SOT-23-5); key specs: GBW 215 MHz, supply ±2.375–±6 V (single 5 V), input-referred noise.
+- **PAM8406 datasheet** — available in this repo as `PAM8406.pdf`. Class-D 2×3 W audio amplifier; key sections: MUTE#/SHDN# pin behaviour, BTL output, supply requirements.
+- **AMS1117 datasheet** — available in this repo as `AMS1117.pdf`. SOT-223 LDO; key fact: tab pad (pin 4) = Vout — must use isolated polygon.
+- **AMS1084 datasheet** — available in this repo as `AMS1084.pdf`. TO-263 5 A LDO; key fact: tab pad = Vout (+5V_P_AMP) — must use isolated polygon. Used in thermal calculator tool.
+- **WBC1-1TLC datasheet** — available in this repo as `WBC1-1TLC.pdf`. Coilcraft 1:1 wideband balun transformer; key specs: frequency range, insertion loss, impedance.
