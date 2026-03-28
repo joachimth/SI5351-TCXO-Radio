@@ -32,6 +32,13 @@ SI5351-TCXO-Radio/
 ├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv         # EasyEDA BOM export (CSV, UTF-16, tab-separated, JLCPCB/LCSC pricing)
 ├── 5560f.pdf                                                                                        # LT5560 Active Mixer IC datasheet
 ├── BGA2869.pdf                                                                                      # BGA2869 MMIC LNA datasheet
+├── SI5351.pdf                                                                                       # SiLabs SI5351A PLL clock generator datasheet
+├── 1XTW26000MAA.pdf                                                                                 # KDS 1XTW26000MAA 26 MHz TCXO datasheet
+├── LT6202.pdf                                                                                       # LT6202 high-speed op-amp datasheet
+├── PAM8406.pdf                                                                                      # PAM8406 class-D audio amplifier datasheet
+├── AMS1117.pdf                                                                                      # AMS1117 LDO voltage regulator datasheet
+├── AMS1084.pdf                                                                                      # AMS1084CM LDO voltage regulator datasheet
+├── WBC1-1TLC.pdf                                                                                    # WBC1-1TLC wideband RF balun transformer datasheet
 ├── polygon_illustration.html                                                                        # AMS1084 tab-pad copper polygon visualiser (Danish)
 └── termisk_beregner.html                                                                            # AMS1084 thermal calculator tool (Danish)
 ```
@@ -294,5 +301,11 @@ Two standalone single-file HTML tools are included:
 - **Netlist and SVG archive** — not present in the repository (were available for Ver3, not exported for Rev4).
 - **LT5560 datasheet** — available in this repo as `5560f.pdf`. Key sections: absolute maximum ratings (5.3 V VCC), application circuits for low-frequency use (page 10–11), EN pin requirements.
 - **BGA2869 datasheet** — available in this repo as `BGA2869.pdf`. Key specs: gain 31.7 dB, NF 3.1 dB at 950 MHz, supply current 24 mA typical. Shown as "BGA2869,115" in EasyEDA schematic (the ",115" suffix is an EasyEDA internal variant tag, not a different component).
-- **MS5351M / SI5351** — not included in repo; refer to SiLabs SI5351 datasheet or Adafruit SI5351 resources for I²C programming details.
+- **SI5351 datasheet** — available in this repo as `SI5351.pdf`. SiLabs SI5351A-B-GT (now Skyworks); key sections: I²C register map, PLL configuration, CLK output settings.
+- **1XTW26000MAA datasheet** — available in this repo as `1XTW26000MAA.pdf`. KDS Daishinku 26 MHz TCXO (X201); key specs: ±500 ppb stability, 1.7–3.6 V supply, SMD3225-4P package.
+- **LT6202 datasheet** — available in this repo as `LT6202.pdf`. High-speed op-amp (SOT-23-5); key specs: GBW 100 MHz, supply 2.5–12.6 V, 1.9 nV/√Hz noise.
+- **PAM8406 datasheet** — available in this repo as `PAM8406.pdf`. Class-D 2×3 W audio amplifier; key sections: MUTE#/SHDN# pin behaviour, BTL output, supply requirements.
+- **AMS1117 datasheet** — available in this repo as `AMS1117.pdf`. SOT-223 LDO; key fact: tab pad (pin 4) = Vout — must use isolated polygon.
+- **AMS1084 datasheet** — available in this repo as `AMS1084.pdf`. TO-263 5 A LDO; key fact: tab pad = Vout (+5V_P_AMP) — must use isolated polygon. Used in thermal calculator tool.
+- **WBC1-1TLC datasheet** — available in this repo as `WBC1-1TLC.pdf`. Coilcraft 1:1 wideband balun transformer; frequency range 0.25–750 MHz, 75 Ω impedance.
 - **AMS1084 / AMS1117** — not included in repo; key fact: tab pad = Vout on both families.
