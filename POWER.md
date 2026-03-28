@@ -7,7 +7,7 @@ The design uses three regulated DC rails derived from a single input supply (VCC
 | Rail | Regulator | Package | Max current | Load |
 |---|---|---|---|---|
 | +3.3 V | AMS1117-3.3 (U101) | SOT-223 | 800 mA | Clock generator, TCXO |
-| +5 V | AMS1117-5.0 (U104) | SOT-223 | 800 mA | Signal chain |
+| +5 V | AMS1117-5.0 (U103) | SOT-223 | 800 mA | Signal chain |
 | +5V_P_AMP | AMS1084CM-5.0 (U102) | TO-263 | 5 A | Audio amplifier only |
 
 ---
@@ -68,7 +68,7 @@ Both AMS1117 regulators dissipate modest power:
 | Regulator | Vdrop (at 12 V in) | Typ current | Power dissipated |
 |---|---|---|---|
 | AMS1117-3.3 U101 | 8.7 V | 34 mA | 0.30 W |
-| AMS1117-5.0 U104 | 7.0 V | 97 mA | 0.68 W |
+| AMS1117-5.0 U103 | 7.0 V | 97 mA | 0.68 W |
 
 The SOT-223 package has θJA ≈ 50°C/W on a standard PCB. At 0.68 W, the junction temperature rise above ambient is approximately 34°C — well within the 125°C maximum.
 
