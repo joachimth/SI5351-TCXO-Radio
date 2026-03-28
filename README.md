@@ -57,6 +57,13 @@ SI5351-TCXO-Radio/
 ├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv # EasyEDA BOM export (CSV, UTF-16, tab-separated)
 ├── 5560f.pdf                                                                               # LT5560 datasheet
 ├── BGA2869.pdf                                                                             # BGA2869 datasheet
+├── SI5351.pdf                                                                              # SI5351A PLL datasheet
+├── 1XTW26000MAA.pdf                                                                        # KDS 26 MHz TCXO datasheet
+├── LT6202.pdf                                                                              # LT6202 op-amp datasheet
+├── PAM8406.pdf                                                                             # PAM8406 audio amp datasheet
+├── AMS1117.pdf                                                                             # AMS1117 LDO datasheet
+├── AMS1084.pdf                                                                             # AMS1084CM LDO datasheet
+├── WBC1-1TLC.pdf                                                                           # WBC1-1TLC balun datasheet
 ├── polygon_illustration.html                                                               # AMS1084 tab-pad copper polygon visualiser (Danish)
 └── termisk_beregner.html                                                                   # AMS1084 thermal calculator (Danish)
 ```
@@ -75,7 +82,7 @@ SI5351-TCXO-Radio/
 | Rail | Regulator | Typical current | Purpose |
 |------|-----------|----------------|---------|
 | +3.3 V | AMS1117-3.3 (U101) | ~34 mA | MS5351M, TCXO |
-| +5 V | AMS1117-5.0 (U103) | ~97 mA | LNA, mixers, op-amp |
+| +5 V | AMS1117-5.0 (U104) | ~97 mA | LNA, mixers, op-amp |
 | +5V_P_AMP | AMS1084CM-5.0 (U102) | ~100–900 mA | PAM8406 audio amp |
 
 Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V recommended).
@@ -83,7 +90,7 @@ Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V 
 ## PCB Layout Notes
 
 - AMS1084CM-5.0 (U102) tab pad is **+5V_P_AMP** — not GND. Use an isolated copper polygon.
-- AMS1117-3.3 (U101) and AMS1117-5.0 (U103) tab pads are **Vout** — not GND.
+- AMS1117-3.3 (U101) and AMS1117-5.0 (U104) tab pads are **Vout** — not GND.
 - LT5560 exposed pad (EP, pin 9) is **PGND** — connect to GND plane with multiple vias.
 - Place decoupling capacitors as close as possible to each IC.
 - Use a ground plane on the bottom layer; connect to top layer GND pours via stitching vias.
