@@ -53,6 +53,7 @@ SI5351-TCXO-Radio/
 ├── HARDWARE.md                                                                             # Detailed circuit description
 ├── POWER.md                                                                                # Power budget and thermal analysis
 ├── BOM.md                                                                                  # Bill of materials
+├── SIGNAL_LEVELS.md                                                                        # Signal level budget, NF, sensitivity, dynamic range
 ├── SCH_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.pdf                                # EasyEDA schematic export, 12 pages
 ├── BOM_SI5351_TCXO_WithMixerAndFilters_SI5351_TCXO_WithMixerAndFilters_2026-03-28-Rev4.csv # EasyEDA BOM export (CSV, UTF-16, tab-separated)
 ├── 5560f.pdf                                                                               # LT5560 datasheet
@@ -94,6 +95,18 @@ Input voltage: **6–15 V DC** (higher input = more heat in regulators; 7–9 V 
 - LT5560 exposed pad (EP, pin 9) is **PGND** — connect to GND plane with multiple vias.
 - Place decoupling capacitors as close as possible to each IC.
 - Use a ground plane on the bottom layer; connect to top layer GND pours via stitching vias.
+
+## Signal Performance
+
+See [SIGNAL_LEVELS.md](SIGNAL_LEVELS.md) for the full signal-level budget including:
+
+- Stage-by-stage gain/loss table (antenna to speaker)
+- Noise figure cascade (Friis formula) — system NF ≈ 6.4 dB
+- Receiver sensitivity — MDS ≈ −118 dBm (≈ 0.30 µVrms at 10 kHz BW, 10 dB SNR)
+- Signal level budgets for weak / typical / strong station scenarios
+- Dynamic range, compression point, and SFDR
+- Image frequency analysis and rejection estimates
+- Audio bandwidth and maximum output power
 
 ## License
 
