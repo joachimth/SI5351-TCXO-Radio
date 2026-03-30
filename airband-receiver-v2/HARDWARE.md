@@ -47,38 +47,60 @@ Each active CLK output is AC-coupled to its load via a 100 pF series capacitor a
 
 ### Purpose
 
-Reject out-of-band signals before the mixer. The image frequency for a high-side LO is:
+Reject out-of-band signals before the mixer — in particular the image frequency, which for high-side LO injection (LO1 = RF + IF) falls at:
 
 ```
-f_image = LO1 − IF = (RF + IF) − IF − 2×IF = RF − 2×IF
+f_image = LO1 + IF = (RF + IF) + IF = RF + 2 × IF
 ```
 
-For 127.5 MHz receive with 10.7 MHz IF:
-```
-f_image = 127.5 − 2×10.7 = 106.1 MHz (FM broadcast band)
-```
-
-The RF BPF must provide adequate attenuation at 106.1 MHz to prevent FM broadcast stations from appearing as spurious responses.
-
-### Topology
-
-LC pi bandpass filter, 3-element, centred on ~127.5 MHz with a passband covering 118–137 MHz (19 MHz, ~15% fractional bandwidth).
-
-| Ref | Function | Notes |
+| RF channel | LO1 | Image |
 |---|---|---|
-| RF301 | SMA antenna input (50 Ω) | Through-hole, same as V1 |
-| D301 | ESD protection (PESD0402-140) | On antenna input net RF_ANT |
-| CT301 | 1.5–3 pF trimmer | Centre frequency fine-tune |
-| L301 | Series inductor (shunt resonator) | TBD — calculate for 127.5 MHz |
-| L302, L303 | Shunt inductors (series resonators) | TBD |
-| C301–C303 | Filter capacitors | TBD |
-| TP301 | Test point on RF_IN_LNA | Allows signal injection after filter |
+| 118.0 MHz | 128.7 MHz | 139.4 MHz (+2.4 MHz above airband top) |
+| 127.5 MHz | 138.2 MHz | 148.9 MHz |
+| 137.0 MHz | 147.7 MHz | 158.4 MHz |
 
-Component values for L301–L303 and C301–C303 are to be calculated or simulated for a Chebyshev or Butterworth response centred at 127.5 MHz. A 3-pole filter is the minimum for useful image rejection. Verified values should be substituted before schematic capture.
+The worst case is 139.4 MHz (for 118 MHz reception), only 2.4 MHz above the filter's upper passband edge. A 3-pole filter with 19 MHz bandwidth provides limited attenuation this close to the passband — approximately 6–10 dB. This is an accepted limitation of the 10.7 MHz IF with high-side injection over a wide tuning range; see ANALYSIS.md for detailed image rejection estimates and the trade-off with low-side injection.
+
+### Topology — Reused from V1
+
+The V2 RF preselector uses the **identical topology and component values** as the V1 design ("Pi with series resonance"), because L302//C301 resonates at:
+
+```
+f = 1 / (2π × √(18 nH × 100 pF)) = 118.7 MHz
+```
+
+This is exactly the lower edge of the airband, giving naturally shaped bandpass coverage from 118 to ~137 MHz with CT301 trimmer adjustment for peak alignment.
+
+```
+                  L302 (18 nH)        L303 (18 nH)
+RF_ANT ──[D301]──────────────[C302]──────────────── RF_IN_LNA
+                    │         3.3 pF         │
+                   [C301]   [CT301]         [C303]
+                   100 pF   1.5–3 pF       100 pF
+                   [L301]                    │
+                   47 nH                    GND
+                    │
+                   GND
+```
+
+CT301 (trimmer) is placed in parallel with the series coupling network to fine-tune the centre frequency after assembly, compensating for inductor tolerances. TP301 provides a 0.5 mm test point at the filter output for signal injection and spectrum analyser probing.
+
+| Ref | Value | Manufacturer | LCSC | Notes |
+|---|---|---|---|---|
+| RF301 | SMA 3 GHz | 皇捷 2LC15SF087 | C22363778 | Through-hole, same as V1 |
+| D301 | ESD 140 V | Littelfuse PESD0402-140 | C10662 | On RF_ANT net |
+| L301 | 47 nH | muRata LQW15AN47NJ00D | C192855 | Series inductor (shunt arm) |
+| L302, L303 | 18 nH | muRata LQW15AN18NJ00D | C82917 | Series inductors; resonates with C301/C303 at 118.7 MHz |
+| C301, C303 | 100 pF | FH 0402CG101J500NT | C1546 | Shunt capacitors |
+| C302 | 3.3 pF | FH 0402CG3R3C500NT | C1565 | Series coupling cap |
+| CT301 | 1.5–3 pF | SEHWA STC3MA03-T1 | C22468119 | Centre frequency trimmer |
+| TP301 | — | — | — | Test point at RF_IN_LNA |
+
+All V1 LCSC part numbers carry over unchanged. The only assembly difference is that CT301 should be adjusted to peak at the desired channel, typically 127–128 MHz (airband centre).
 
 **Net names:**
 - `RF_ANT` — SMA RF301 → D301 → filter input
-- `RF_IN_LNA` — filter output → LNA / Mixer 1
+- `RF_IN_LNA` — filter output → JP401 (LNA bypass) / LNA input / Mixer 1 RF input
 
 ---
 
@@ -127,7 +149,7 @@ The AD8342 is an active double-balanced mixer from Analog Devices:
 - IIP3: +24 dBm (5 V supply)
 - RF input: differential (RFIN+/RFIN−), ~200 Ω internally biased
 - IF output: differential current output (IFOP/IFON), requires pull-up load
-- Package: 16-lead TSSOP (AD8342ARUZ) or 16-lead LFCSP (AD8342ACPZ)
+- Package: 16-lead LFCSP 3×3 mm (AD8342ACPZ-REEL7, LCSC C182567)
 
 ### Single-Ended Connections
 
