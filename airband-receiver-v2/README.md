@@ -94,7 +94,8 @@ airband-receiver-v2/
 ├── README.md     — this file
 ├── HARDWARE.md   — stage-by-stage circuit description
 ├── POWER.md      — power budget and thermal analysis
-└── BOM.md        — bill of materials (LCSC part numbers)
+├── BOM.md        — bill of materials (LCSC part numbers)
+└── ANALYSIS.md   — signal levels, cascaded NF, SNR, image rejection, GALI-84+ decision
 ```
 
 ---
