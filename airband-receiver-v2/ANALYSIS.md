@@ -1,6 +1,6 @@
 # Signal Chain Analysis — AM Airband Receiver V2
 
-Complete signal level, noise figure, and SNR analysis for the 118–137 MHz single-conversion superheterodyne. Used to evaluate whether the GALI-84+ IF gain block is required and under what conditions the BGA2869 LNA is necessary.
+Complete signal level, noise figure, and SNR analysis for the 118–137 MHz double-conversion superheterodyne. Three AD8342 mixers, 10.7 MHz first IF, 455 kHz second IF, synchronous AM product detection.
 
 ---
 
@@ -9,15 +9,14 @@ Complete signal level, noise figure, and SNR analysis for the 118–137 MHz sing
 | Parameter | Value | Notes |
 |---|---|---|
 | Receive frequency | 127.5 MHz | Airband midpoint |
-| IF frequency | 10.7 MHz | Single conversion |
-| LO injection | High-side (LO1 = RF + IF) | LO1 range: 128.7–147.7 MHz |
+| First IF | 10.7 MHz | Image rejection stage |
+| Second IF | 455 kHz | Channel selectivity stage |
+| LO injection | Low-side (CLK0 = RF − IF) | CLK0 range: 107.3–126.3 MHz |
 | Channel bandwidth | 8 kHz | AM voice, two-sided |
 | Noise bandwidth (audio) | 4 kHz | One-sided baseband after detection |
-| Reference temperature | 290 K (17°C) | Standard for noise calculations |
 | Thermal noise floor (kTB, 8 kHz) | −135 dBm | −174 dBm/Hz + 10·log₁₀(8000) |
 | Target SNR for intelligible voice | ≥ 10 dB | Minimum; ≥ 20 dB preferred |
-| Reference impedance | 50 Ω | Antenna, filter, LNA domains |
-| AD8342 single-ended use | −3 dB gain derating | Applied to convert differential spec to SE |
+| AD8342 single-ended derating | −3 dB gain, +3 dB NF | Applied vs. differential spec |
 
 ---
 
@@ -25,13 +24,14 @@ Complete signal level, noise figure, and SNR analysis for the 118–137 MHz sing
 
 | Stage | Component | Gain (dB) | NF (dB) | Notes |
 |---|---|---|---|---|
-| RF BPF | LC pi, 3-pole | −2 | 2 | Estimated IL for 18 nH air-core inductors with ~100 Q; verify on assembled board |
-| LNA (optional) | BGA2869 at ~130 MHz | +32 | 3.1 | Datasheet spec is at 950 MHz; gain at 130 MHz typically slightly higher |
-| AD8342 Mixer 1 | Single-ended, 5 V | 0 | 13 | Datasheet: +3.5 dB gain, ~10 dB NF (differential); −3 dB SE derating applied to gain; +3 dB applied to NF |
-| IF BPF | HCCF3 ceramic, 10.7 MHz | −4 | 4 | HCCF3 series typical IL; measure on assembled board |
-| GALI-84+ (optional) | IF gain block, 10.7 MHz | +18 | 3 | Gain and NF from datasheet at 10.7 MHz |
-| AD8342 Mixer 2 (PD) | Product detector, SE | 0 | 13 | Same SE conditions as Mixer 1 |
-| LT6202 | Audio amp, inverting | +14 | ~12 | Configured for ~14 dB gain; NF not dominant at this stage |
+| RF BPF | LC pi, 3-pole | −2 | 2 | Estimated IL; verify on assembled board |
+| LNA (optional) | BGA2869 at ~130 MHz | +32 | 3.1 | Datasheet spec (950 MHz); gain at 130 MHz typically ≥32 dB |
+| AD8342 Mixer 1 (RF→10.7 MHz) | Single-ended, 5 V | 0 | 13 | +3.5 dB diff − 3 dB SE derating; NF 10 dB + 3 dB SE |
+| 10.7 MHz BPF | HCCF3 ceramic | −4 | 4 | Typical IL; measure on board |
+| AD8342 Mixer 2 (10.7→455 kHz) | Single-ended, 5 V | 0 | 13 | Same SE conditions |
+| 455 kHz BPF | HCCF2 ceramic | −5 | 5 | Typical IL for HCCF2; slightly higher than HCCF3 |
+| AD8342 Mixer 3 (product det.) | Single-ended, 5 V | 0 | 13 | Same SE conditions |
+| LT6202 | Audio amp, 28 dB | +28 | ~12 | Not dominant at this stage |
 
 ---
 
@@ -39,256 +39,210 @@ Complete signal level, noise figure, and SNR analysis for the 118–137 MHz sing
 
 Friis formula:
 ```
-F_total = F₁ + (F₂−1)/G₁ + (F₃−1)/(G₁G₂) + (F₄−1)/(G₁G₂G₃) + …
+F_total = F₁ + (F₂−1)/G₁ + (F₃−1)/(G₁G₂) + …
 ```
 
-All values use linear noise factor (F = 10^(NF_dB/10)) and linear gain (G = 10^(gain_dB/10)).
+Linear noise factor F = 10^(NF_dB/10), linear gain G = 10^(gain_dB/10).
 
-### Scenario 1: No LNA, No GALI-84+
+### Scenario 1: No LNA
 
-Chain: **RF BPF → Mixer 1 → IF BPF → PD Mixer → LT6202**
-
-| Stage | NF (dB) | F (linear) | Gain (dB) | G (linear) | Cumulative G | (Fₙ−1)/G_prev |
-|---|---|---|---|---|---|---|
-| RF BPF | 2 | 1.585 | −2 | 0.631 | 0.631 | — (first stage) |
-| AD8342 Mixer 1 | 13 | 19.95 | 0 | 1.000 | 0.631 | (19.95−1)/0.631 = **30.0** |
-| IF BPF | 4 | 2.512 | −4 | 0.398 | 0.251 | (2.512−1)/0.631 = **2.40** |
-| AD8342 PD | 13 | 19.95 | 0 | 1.000 | 0.251 | (19.95−1)/0.251 = **75.5** |
-| LT6202 | 12 | 15.85 | +14 | 25.12 | 6.31 | (15.85−1)/0.251 = **59.2** |
-
-```
-F_total = 1.585 + 30.0 + 2.40 + 75.5 + 59.2 = 168.7
-NF_system = 10 · log₁₀(168.7) = 22.3 dB
-```
-
-The product detector (PD Mixer) dominates because the cumulative gain at that point is only −6 dB (0.631 × 1.0 × 0.398 = 0.251). This is the fundamental weakness of a direct-conversion or low-gain IF chain.
-
-**MDS (Minimum Detectable Signal) at 10 dB SNR:**
-```
-Noise floor = −135 dBm + 22.3 dB = −112.7 dBm (in 8 kHz BW)
-MDS = −112.7 + 10 = −102.7 dBm ≈ −103 dBm
-```
-
----
-
-### Scenario 2: No LNA, With GALI-84+ after IF Filter
-
-Chain: **RF BPF → Mixer 1 → IF BPF → GALI-84+ → PD Mixer → LT6202**
+Chain: **RF BPF → Mixer 1 → 10.7 MHz BPF → Mixer 2 → 455 kHz BPF → PD Mixer → LT6202**
 
 | Stage | NF (dB) | F | Gain (dB) | G | Cumul. G | (Fₙ−1)/G_prev |
 |---|---|---|---|---|---|---|
 | RF BPF | 2 | 1.585 | −2 | 0.631 | 0.631 | — |
 | AD8342 Mixer 1 | 13 | 19.95 | 0 | 1.000 | 0.631 | 30.0 |
-| IF BPF | 4 | 2.512 | −4 | 0.398 | 0.251 | 2.40 |
-| GALI-84+ | 3 | 2.000 | +18 | 63.10 | 15.84 | (2.0−1)/0.251 = **3.98** |
-| AD8342 PD | 13 | 19.95 | 0 | 1.000 | 15.84 | (19.95−1)/15.84 = **1.20** |
-| LT6202 | 12 | 15.85 | +14 | 25.12 | 398 | (15.85−1)/15.84 = **0.94** |
+| 10.7 MHz BPF | 4 | 2.512 | −4 | 0.398 | 0.251 | 2.40 |
+| AD8342 Mixer 2 | 13 | 19.95 | 0 | 1.000 | 0.251 | 75.5 |
+| 455 kHz BPF | 5 | 3.162 | −5 | 0.316 | 0.0794 | 8.56 |
+| AD8342 PD | 13 | 19.95 | 0 | 1.000 | 0.0794 | 238.5 |
+| LT6202 | 12 | 15.85 | +28 | 631 | 50.1 | 188.1 |
 
 ```
-F_total = 1.585 + 30.0 + 2.40 + 3.98 + 1.20 + 0.94 = 40.1
-NF_system = 10 · log₁₀(40.1) = 16.0 dB
+F_total = 1.585 + 30.0 + 2.40 + 75.5 + 8.56 + 238.5 + 188.1 = 544.6
+NF_system = 10 · log₁₀(544.6) = 27.4 dB
 ```
 
-GALI-84+ provides **6.3 dB improvement** over Scenario 1. The first mixer still dominates the noise figure, but the product detector contribution is reduced from 75.5 to 1.2 (because GALI-84+ raises the cumulative gain from 0.251 to 15.84 before the PD).
+The product detector (Mixer 3) dominates because the cumulative gain at that point is only −11 dB (0.631 × 1 × 0.398 × 1 × 0.316 = 0.0794). This is the fundamental sensitivity limitation without an LNA.
 
-**MDS:**
+**MDS (10 dB SNR):**
 ```
-Noise floor = −135 + 16.0 = −119 dBm
-MDS = −119 + 10 = −109 dBm
+Noise floor = −135 + 27.4 = −107.6 dBm
+MDS = −107.6 + 10 = −97.6 dBm ≈ −98 dBm
 ```
 
 ---
 
-### Scenario 3: With LNA, No GALI-84+
+### Scenario 2: With BGA2869 LNA
 
-Chain: **RF BPF → BGA2869 LNA → Mixer 1 → IF BPF → PD Mixer → LT6202**
+Chain: **RF BPF → BGA2869 → Mixer 1 → 10.7 MHz BPF → Mixer 2 → 455 kHz BPF → PD → LT6202**
 
 | Stage | NF (dB) | F | Gain (dB) | G | Cumul. G | (Fₙ−1)/G_prev |
 |---|---|---|---|---|---|---|
 | RF BPF | 2 | 1.585 | −2 | 0.631 | 0.631 | — |
-| BGA2869 LNA | 3.1 | 2.042 | +32 | 1585 | 1000 | (2.042−1)/0.631 = **1.65** |
-| AD8342 Mixer 1 | 13 | 19.95 | 0 | 1.000 | 1000 | (19.95−1)/1000 = **0.019** |
-| IF BPF | 4 | 2.512 | −4 | 0.398 | 398 | (2.512−1)/1000 = **0.0015** |
-| AD8342 PD | 13 | 19.95 | 0 | 1.000 | 398 | (19.95−1)/398 = **0.047** |
-| LT6202 | 12 | 15.85 | +14 | 25.12 | 10000 | (15.85−1)/398 = **0.037** |
+| BGA2869 LNA | 3.1 | 2.042 | +32 | 1585 | 1000 | 1.65 |
+| AD8342 Mixer 1 | 13 | 19.95 | 0 | 1.000 | 1000 | 0.019 |
+| 10.7 MHz BPF | 4 | 2.512 | −4 | 0.398 | 398 | 0.0015 |
+| AD8342 Mixer 2 | 13 | 19.95 | 0 | 1.000 | 398 | 0.047 |
+| 455 kHz BPF | 5 | 3.162 | −5 | 0.316 | 125.9 | 0.0054 |
+| AD8342 PD | 13 | 19.95 | 0 | 1.000 | 125.9 | 0.150 |
+| LT6202 | 12 | 15.85 | +28 | 631 | 79432 | 0.119 |
 
 ```
-F_total = 1.585 + 1.65 + 0.019 + 0.0015 + 0.047 + 0.037 = 3.34
-NF_system = 10 · log₁₀(3.34) = 5.2 dB
+F_total = 1.585 + 1.65 + 0.019 + 0.0015 + 0.047 + 0.0054 + 0.150 + 0.119 = 3.577
+NF_system = 10 · log₁₀(3.577) = 5.5 dB
 ```
-
-The BGA2869 LNA almost entirely determines the system noise figure. All subsequent stages contribute less than 0.1 dB to the cascade.
 
 **MDS:**
 ```
-Noise floor = −135 + 5.2 = −129.8 dBm ≈ −130 dBm
-MDS = −130 + 10 = −120 dBm
+Noise floor = −135 + 5.5 = −129.5 dBm
+MDS = −129.5 + 10 = −119.5 dBm ≈ −120 dBm
 ```
-
----
-
-### Scenario 4: With LNA + GALI-84+
-
-Adding GALI-84+ after the IF filter changes the LT6202 and PD contributions by < 0.1 dB. System NF remains 5.2 dB. **GALI-84+ provides no meaningful benefit when the LNA is installed.**
 
 ---
 
 ## Sensitivity Summary
 
-| Configuration | System NF | Noise floor (8 kHz) | MDS (10 dB SNR) | Improvement vs. base |
-|---|---|---|---|---|
-| No LNA, no GALI | 22.3 dB | −112.7 dBm | **−102.7 dBm** | baseline |
-| No LNA, + GALI-84+ | 16.0 dB | −119.0 dBm | **−109.0 dBm** | +6.3 dB |
-| + LNA, no GALI | 5.2 dB | −129.8 dBm | **−119.8 dBm** | +17.1 dB |
-| + LNA, + GALI-84+ | 5.2 dB | −129.8 dBm | **−119.8 dBm** | +17.1 dB |
+| Configuration | System NF | Noise floor (8 kHz) | MDS (10 dB SNR) |
+|---|---|---|---|
+| No LNA | 27.4 dB | −107.6 dBm | **−97.6 dBm** |
+| With BGA2869 LNA | 5.5 dB | −129.5 dBm | **−119.5 dBm** |
+| Improvement with LNA | 21.9 dB | 21.9 dB | **+21.9 dB** |
+
+The double-conversion chain adds ~5 dB to the system NF compared to the single-conversion V2 design (due to the additional Mixer 2 + 455 kHz filter loss before the product detector). The LNA compensates fully: with LNA the system NF is 5.5 dB in both single- and double-conversion configurations.
+
+---
+
+## Channel Selectivity
+
+| Filter stage | Bandwidth | Adjacent channel rejection (25 kHz) | Adjacent channel rejection (8.33 kHz) |
+|---|---|---|---|
+| 10.7 MHz BPF (HCCF3) | ~280 kHz | ~0 dB (filter too wide) | ~0 dB |
+| 455 kHz BPF (HCCF2) | ~6–8 kHz | **>30 dB** | **~10–15 dB** |
+| Audio LP filter (LT6202, 3.1 kHz) | 3.1 kHz | +16 dB additional | marginal |
+| **Combined (25 kHz channels)** | | **>46 dB total** | — |
+| **Combined (8.33 kHz channels)** | | — | **~25–30 dB total** |
+
+For **25 kHz channel spacing** (standard in most airband operations): adjacent channel rejection >46 dB — fully comparable to commercial monitoring receivers.
+
+For **8.33 kHz spacing** (European IFR): rejection ~25–30 dB — adequate for typical monitoring; adjacent channels will be audible only if very strong relative to the desired signal.
 
 ---
 
 ## Signal Level Budget
 
-Reference scenario: −90 dBm input signal (weak aircraft, adequate SNR in most configurations).
-
-### Without LNA
-
-| Point in chain | Signal level (dBm) | SNR in 8 kHz (dB) | Comment |
-|---|---|---|---|
-| Antenna input | −90.0 | 45.0 | Reference signal |
-| After RF BPF (−2 dB) | −92.0 | 43.0 | Passive filter loss |
-| After AD8342 Mixer 1 (0 dB, SE) | −92.0 | ~22.7* | System NF now sets floor |
-| After IF BPF (−4 dB) | −96.0 | ~22.7* | Loss, but NF already set |
-| After AD8342 PD (0 dB) | −96.0 | ~22.7 | Audio-band output |
-| After LT6202 (+14 dB) | −82.0 | ~22.7 | SNR preserved in gain stage |
-
-*SNR limited by system NF of 22.3 dB: SNR = (−90) − (−135 + 22.3) − (10 dB margin) = 22.7 dB.
-
-**Audio output level from LT6202:**
-- −82 dBm into 50 Ω equivalent ≈ 5.6 µV rms
-- PAM8406 input sensitivity for rated output (~0.5 V rms): additional ~39 dB gain required
-- **LT6202 gain should be increased to ~28 dB** (matching V1's 25.5× / 28 dB configuration), and/or a second gain stage should be considered.
+Reference scenario: −90 dBm input signal (weak aircraft, adequate SNR with LNA).
 
 ### With LNA
 
-| Point in chain | Signal level (dBm) | SNR in 8 kHz (dB) |
+| Point in chain | Signal level (dBm) | Cumulative gain/loss |
 |---|---|---|
-| Antenna input | −90.0 | 39.8* |
-| After RF BPF (−2 dB) | −92.0 | 39.8 |
-| After BGA2869 LNA (+32 dB) | −60.0 | 39.8 |
-| After AD8342 Mixer 1 (0 dB) | −60.0 | 39.8 |
-| After IF BPF (−4 dB) | −64.0 | 39.8 |
-| After AD8342 PD (0 dB) | −64.0 | 39.8 |
-| After LT6202 (+28 dB) | −36.0 | 39.8 |
+| Antenna input | −90.0 | reference |
+| After RF BPF (−2 dB) | −92.0 | −2 dB |
+| After BGA2869 LNA (+32 dB) | −60.0 | +30 dB |
+| After AD8342 Mixer 1 (0 dB) | −60.0 | +30 dB |
+| After 10.7 MHz BPF (−4 dB) | −64.0 | +26 dB |
+| After AD8342 Mixer 2 (0 dB) | −64.0 | +26 dB |
+| After 455 kHz BPF (−5 dB) | −69.0 | +21 dB |
+| After AD8342 PD (0 dB) | −69.0 | +21 dB |
+| After LT6202 (+28 dB) | −41.0 | +49 dB |
+| PAM8406 input | −41.0 | — |
 
-*SNR = (−90) − (−130) = 40 dB (signal well above noise floor).
+At −41 dBm, the PAM8406 (sensitivity ~0.1–0.5 V rms for rated output) receives approximately 20 mV rms (into 50 Ω equivalent) — adequate for clear audio output.
 
-Audio output at −36 dBm → ~11 mV rms into 50 Ω equivalent. PAM8406 gain (~24 dB) then brings this to ~173 mV rms output — **adequate for clear speaker output** from a moderate antenna.
+**SNR at audio output:** signal −41 dBm, noise floor −129.5 dBm → SNR = 88.5 dB (limited by system NF of 5.5 dB, not audio stages) — excellent.
 
----
+### Without LNA
 
-## Audio Gain Recommendation
-
-The LT6202 should be configured for **28 dB gain** (identical to V1: R1102/R1101 = 5.1 kΩ / 200 Ω) rather than the unity-gain starting point in the current HARDWARE.md description. This matches the signal level expected from the AD8342 output to the PAM8406 input sensitivity.
-
-If overdriven on strong signals, reduce R1102 to lower gain. If audio is too quiet with typical airband signals, verify IF filter insertion loss first, then consider the GALI-84+ IF gain block.
-
----
-
-## GALI-84+ Recommendation
-
-| Scenario | Recommendation |
+| Point in chain | Signal level (dBm) |
 |---|---|
-| **LNA installed** | **Not required.** System NF = 5.2 dB, MDS = −120 dBm. GALI-84+ adds <0.1 dB improvement. |
-| **No LNA, good antenna (≥1 m whip)** | **Not required for initial bring-up.** MDS −103 dBm is adequate for aircraft at typical ranges and airport-area ground stations. |
-| **No LNA, short antenna (<30 cm)** | **Consider GALI-84+.** The 6.3 dB improvement (MDS −103 → −109 dBm) may make the difference between marginal and reliable reception. |
-| **No LNA, very weak signals / long range** | **Use LNA instead.** BGA2869 LNA provides 17 dB improvement vs. 6 dB for GALI-84+. LNA is the better investment. |
+| After RF BPF | −92.0 |
+| After Mixer 1 | −92.0 |
+| After 10.7 MHz BPF | −96.0 |
+| After Mixer 2 | −96.0 |
+| After 455 kHz BPF | −101.0 |
+| After PD Mixer | −101.0 |
+| After LT6202 (+28 dB) | −73.0 |
 
-**Verdict: Build and test without GALI-84+.** If sensitivity is insufficient after adding the BGA2869 LNA, the chain is working correctly and the issue is the antenna. If sensitivity is insufficient without the LNA and a reasonable antenna is used, add the LNA first. GALI-84+ is a last resort if the LNA causes overload from strong local signals.
+At −73 dBm the PAM8406 receives approximately 1.6 mV rms — low but potentially audible at maximum volume. A −90 dBm input without LNA gives SNR = −90 − (−107.6) = 17.6 dB — intelligible voice.
 
 ---
 
 ## Image Rejection Analysis
 
-With high-side LO injection (LO1 = RF + IF), the image frequency is:
+With **low-side LO injection** (CLK0 = RF − IF):
 
 ```
-f_image = LO1 + IF = RF + 2 × IF
+f_image = RF − 2 × IF
 ```
 
-| Receive freq | LO1 | Image freq | Image offset from BPF edge |
+| Receive freq | CLK0 | Image | BPF rejection |
 |---|---|---|---|
-| 118.0 MHz | 128.7 MHz | 139.4 MHz | +2.4 MHz above 137 MHz top |
-| 120.0 MHz | 130.7 MHz | 141.4 MHz | +4.4 MHz above top |
-| 127.5 MHz | 138.2 MHz | 148.9 MHz | +11.9 MHz above top |
-| 137.0 MHz | 147.7 MHz | 158.4 MHz | +21.4 MHz above top |
+| 118.0 MHz | 107.3 MHz | 96.6 MHz | >35 dB (well below FM band bottom) |
+| 120.0 MHz | 109.3 MHz | 98.6 MHz | >35 dB (below FM band) |
+| 127.5 MHz | 116.8 MHz | 106.1 MHz | ~25 dB (middle of FM band, 107.5 MHz typical) |
+| 133.0 MHz | 122.3 MHz | 111.6 MHz | ~20 dB (below airband, quiet) |
+| 137.0 MHz | 126.3 MHz | 115.6 MHz | ~8–12 dB (2.4 MHz below filter lower edge) |
 
-**Estimated image rejection vs. frequency offset (3-pole BPF, ~15% BW):**
+**Worst case:** 137 MHz reception — image at 115.6 MHz receives only ~8–12 dB rejection from the 3-pole RF BPF. The 115.6 MHz image falls in a relatively quiet frequency range (between FM broadcast and airband), so practical interference is unlikely. If needed, a 4-pole RF BPF would increase rejection to ~20 dB at this offset.
 
-| Offset from passband edge | Estimated attenuation |
-|---|---|
-| 2–3 MHz | 6–10 dB |
-| 5 MHz | 12–18 dB |
-| 10 MHz | 20–28 dB |
-| 20 MHz | 30–40 dB |
+**Best case:** Channels below 133 MHz have images well into or below the FM band (88–108 MHz), where the RF BPF provides 25–40 dB rejection.
 
-The worst case is reception of 118–120 MHz channels, where the image at 139–141 MHz receives only ~6–12 dB rejection. Signals in that range (upper airband: 139–158 MHz, VHF-Lo aviation navigation/communications) could appear as interference.
-
-**Practical impact:** In typical use, aircraft transmissions are short and time-separated, so image interference is unlikely to cause persistent problems. For critical applications, consider:
-
-1. **Low-side injection (LO1 = RF − IF):** Images fall at 96.6–115.6 MHz (FM broadcast band ends at ~108 MHz, so worst case is 115.6 MHz, 2.4 MHz below the 118 MHz passband lower edge — similar rejection to the high-side case but images are in a less active frequency range).
-2. **Higher-order RF filter (5-pole):** Adds ~10 dB attenuation at 2–3 MHz from the passband edge.
-3. **Higher IF (e.g., 21.4 MHz):** Places all images ≥ 42.8 MHz from the receive frequency, giving 35–45 dB rejection from a 3-pole BPF.
-
-For prototype bring-up, high-side injection as specified is acceptable. Note: switching to low-side injection only requires changing the MS5351M CLK0 programming — no hardware changes needed.
+**Comparison with high-side injection:** With high-side injection (CLK0 = RF + IF), images fall at 139–158 MHz — within or just above the airband, with 2–12 dB rejection at the lower end. Low-side injection is clearly superior for this band.
 
 ---
 
-## Dynamic Range Estimate
+## GALI-84+ Assessment
 
-### Without LNA
+With the double-conversion architecture and BGA2869 LNA:
 
-- Noise floor: −112.7 dBm
-- 1 dB compression point of AD8342 at RF input: from datasheet, IP1dB ≈ +10 dBm at RF input
-- Spurious-free dynamic range: limited by first mixer IIP3 (~+18 dBm single-ended)
-- SFDR ≈ (2/3) × (IIP3 − noise floor) = (2/3) × (18 − (−112.7)) = 87 dB (theoretical)
+| Config | System NF | Adding GALI-84+ after 455 kHz filter |
+|---|---|---|
+| With LNA | 5.5 dB | <0.1 dB improvement |
+| Without LNA | 27.4 dB | ~8 dB improvement (moves PD contribution) |
 
-In practice, the AD8342 IIP3 at 127.5 MHz with single-ended drive may be lower. The absence of AGC means strong local transmitters on 118–137 MHz can desensitise or overload the mixer directly.
-
-### With LNA
-
-- BGA2869 OIP3 ≈ +15 + 32 = +47 dBm (estimated)
-- BGA2869 output P1dB ≈ +10 dBm
-- Adding the LNA improves sensitivity but reduces the strong-signal handling
-- If overload from a nearby transmitter is observed: **bypass the LNA via JP401** and test without it
-
-### Strong-signal recommendation
-
-If the receiver is used near an active airfield with strong tower transmissions, consider installing a 3 dB or 6 dB resistive attenuator pad between the RF BPF output and the LNA input. This directly trades sensitivity for linearity without otherwise modifying the chain.
+**GALI-84+ verdict: Not needed.** With LNA the system NF of 5.5 dB already gives MDS −120 dBm, which equals or exceeds most commercial monitoring receivers. Without LNA, the BGA2869 is a far better investment (21.9 dB improvement vs. 8 dB for GALI-84+).
 
 ---
 
-## Summary Table
+## Dynamic Range
 
-| Metric | No LNA, No GALI | No LNA, + GALI | + LNA, No GALI |
-|---|---|---|---|
-| System NF | 22.3 dB | 16.0 dB | 5.2 dB |
-| MDS (10 dB SNR, 8 kHz) | −103 dBm | −109 dBm | −120 dBm |
-| Useful range (aircraft at FL350) | ~150 km | ~300 km | ~600 km |
-| GALI-84+ cost/complexity | — | required | not needed |
-| Overload risk | low | low | higher — use LNA bypass JP401 if needed |
+| Metric | Without LNA | With LNA |
+|---|---|---|
+| Noise floor (8 kHz) | −107.6 dBm | −129.5 dBm |
+| AD8342 IIP3 (single-ended, typ.) | ~+18 dBm | ~+18 dBm at RF input (after LNA) |
+| BGA2869 OIP3 (estimated) | — | ~+47 dBm |
+| System IIP3 (LNA limits) | — | IIP3 = OIP3_LNA − G_LNA = 47 − 32 = +15 dBm |
+| Spurious-free DR (approx.) | ~(2/3)×(18+107.6) = 83 dB | ~(2/3)×(15+129.5) = 96 dB |
 
-*Range estimates are approximate, assuming −100 dBm EIRP from aircraft and free-space propagation at 130 MHz with typical airband antenna.*
+These are theoretical estimates. Practical SFDR will be lower due to close-in spurs, LO feedthrough, and IMD products. At a busy airport with many simultaneous strong transmissions, bypass the LNA via JP401 if overload symptoms appear (audio distortion, desensitisation).
+
+---
+
+## Squelch Calibration
+
+The squelch threshold (RV1201) should be set at bring-up:
+
+1. Connect antenna, tune to a known active frequency
+2. Verify audio is present with squelch fully open (RV1201 at minimum resistance)
+3. Slowly increase threshold until PAM8406 just mutes during transmission gaps
+4. Verify the 100 ms tail keeps audio connected through brief pauses in speech
+
+The LM393 open-collector output requires the R1205 pull-up to +5V_P_AMP (not +5V) so that the PAM8406 SHDN# receives the correct supply-referenced logic level.
 
 ---
 
 ## Bring-Up Measurement Plan
 
-At each test point (TP301, TP501, TP601, TP701), measure with a spectrum analyser or SDR dongle:
-
-| Test point | Expected signal level (−90 dBm input, with LNA) | What a good reading confirms |
+| Test point | Expected (−90 dBm input, with LNA) | Confirms |
 |---|---|---|
-| TP301 (RF_IN_LNA) | ~−92 dBm at 127.5 MHz | RF BPF working, LNA input present |
-| After LNA (no TP, measure at Mixer 1 input) | ~−60 dBm at 127.5 MHz | LNA gain ≈ 32 dB |
-| TP501 (IF_IN, before IF filter) | ~−60 dBm at 10.7 MHz + noise | Mixer 1 converting correctly |
-| TP601 (IF_OUT, after IF filter) | ~−64 dBm at 10.7 MHz | IF filter inserting ~4 dB |
-| TP701 (AUDIO_RAW) | Audio signal, ~−64 dBm equivalent | Product detector demodulating AM |
+| TP301 (RF_IN_LNA) | −92 dBm @ 127.5 MHz | RF BPF passing, LNA input present |
+| LNA output (probe at U501 RFIN+) | −60 dBm @ 127.5 MHz | LNA gain ≈ 32 dB |
+| TP501 (IF1_IN) | −60 dBm @ 10.7 MHz | Mixer 1 converting correctly |
+| TP601 (IF1_OUT) | −64 dBm @ 10.7 MHz | 10.7 MHz filter inserting ~4 dB |
+| TP701 (IF2_IN) | −64 dBm @ 455 kHz | Mixer 2 converting correctly |
+| TP901 (IF2_OUT) | −69 dBm @ 455 kHz | 455 kHz filter inserting ~5 dB |
+| TP1001 (AUDIO_RAW) | Audio envelope ~−69 dBm | Product detector demodulating AM |
+| LT6202 output | ~−41 dBm audio | 28 dB gain applied |
 
-If the signal at TP501 is absent but LNA output is present, suspect the LO1 frequency setting in the MS5351M (most common bring-up issue).
+**Most common bring-up issue:** No signal at TP501 despite LNA output present → CLK0 frequency wrong in MS5351M. Use I²C header J201 to re-program CLK0 = f_receive − 10.7 MHz. Verify with frequency counter or spectrum analyser on the LO output pad.

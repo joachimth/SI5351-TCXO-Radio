@@ -1,6 +1,6 @@
 # Hardware Description — AM Airband Receiver V2
 
-Stage-by-stage circuit description. References use the designator convention Uxxx, Cxxx, Rxxx, Lxxx inherited from V1 where components are shared; new V2 designators start from their respective page-equivalent numbering.
+Stage-by-stage circuit description for the double-conversion 118–137 MHz AM airband receiver. Three AD8342 mixers, no baluns, 10.7 MHz first IF for image rejection, 455 kHz second IF for channel selectivity.
 
 ---
 
@@ -11,7 +11,7 @@ Stage-by-stage circuit description. References use the designator convention Uxx
 | Rail | Regulator | Package | Max current | Load in V2 |
 |---|---|---|---|---|
 | +3.3 V | AMS1117-3.3 (U101) | SOT-223 | 800 mA | MS5351M, TCXO |
-| +5 V | AMS1117-5.0 (U103) | SOT-223 | 800 mA | AD8342 ×2, BGA2869 (optional), LT6202 |
+| +5 V | AMS1117-5.0 (U103) | SOT-223 | 800 mA | AD8342 ×3, BGA2869 (optional), LT6202 |
 | +5V_P_AMP | AMS1084CM-5.0 (U102) | TO-263 | 5 A | PAM8406 only |
 
 DC input via DC101 (DC-005 2.0 barrel jack, 5.5/2.0 mm). Bulk decoupling: 100 µF tantalum capacitors (CASE-B) on each rail.
@@ -22,24 +22,21 @@ DC input via DC101 (DC-005 2.0 barrel jack, 5.5/2.0 mm). Bulk decoupling: 100 µ
 
 ## Page 2 — Clock Generator
 
-**Identical to V1.** MS5351M (U201) PLL locked to KDS 1XTW26000MAA 26 MHz TCXO (X201).
+**Same hardware as V1.** MS5351M (U201) PLL locked to KDS 1XTW26000MAA 26 MHz TCXO (X201).
 
-- Supply: 3.3 V
-- I²C address: 0x60 (7-bit)
-- I²C pull-ups: R201, R202 = 2 kΩ to +3.3 V
-- Output bypassing: 100 nF (C201, C202) + 1 µF (C203) on VCC
-
-In V2 only **CLK0** and **CLK1** are used:
+All three CLK outputs are now used:
 
 | Output | Frequency | Purpose |
 |---|---|---|
-| CLK0 | 128.7–147.7 MHz (RF + 10.7 MHz) | RF mixer LO1 |
-| CLK1 | 10.7 MHz (fixed) | Product detector LO2 |
-| CLK2 | disabled | unused |
+| CLK0 | RF − 10.7 MHz = 107.3–126.3 MHz | LO1 — RF mixer (low-side injection) |
+| CLK1 | 10.7 MHz − 455 kHz = 10.245 MHz | LO2 — second IF mixer |
+| CLK2 | 455 kHz (fixed) | LO3 — product detector |
 
-Each active CLK output is AC-coupled to its load via a 100 pF series capacitor and a 22 Ω series resistor to reduce ringing and limit LO drive level at the AD8342 LO input.
+**Low-side injection (CLK0 = RF − IF):** The image frequency falls at RF − 2×IF = 96.6–115.6 MHz, well below the airband and in the FM broadcast band or below. The RF BPF provides 20–35 dB rejection at these frequencies. This is significantly better than high-side injection, which places images within 2–12 MHz of the airband top.
 
-**Frequency note:** The SI5351 CLK0 must track the desired receive frequency. For a station at 127.5 MHz (airband midpoint), CLK0 = 127.5 + 10.7 = 138.2 MHz. The SI5351 is set via I²C by a microcontroller; CLK1 is always 10.7 MHz.
+Each active CLK output is AC-coupled to its load via a 100 pF series capacitor and a 22 Ω series resistor to reduce ringing.
+
+I²C pull-ups: R201, R202 = 2 kΩ to +3.3 V. Programming header J201 (4-pin: GND/+3.3V/SDA/SCL) provides microcontroller access.
 
 ---
 
@@ -47,29 +44,29 @@ Each active CLK output is AC-coupled to its load via a 100 pF series capacitor a
 
 ### Purpose
 
-Reject out-of-band signals before the mixer — in particular the image frequency, which for high-side LO injection (LO1 = RF + IF) falls at:
+Reject out-of-band signals before the mixer. With low-side injection (CLK0 = RF − IF), the image falls at:
 
 ```
-f_image = LO1 + IF = (RF + IF) + IF = RF + 2 × IF
+f_image = RF − 2 × IF
 ```
 
-| RF channel | LO1 | Image |
+| RF channel | LO1 (CLK0) | Image |
 |---|---|---|
-| 118.0 MHz | 128.7 MHz | 139.4 MHz (+2.4 MHz above airband top) |
-| 127.5 MHz | 138.2 MHz | 148.9 MHz |
-| 137.0 MHz | 147.7 MHz | 158.4 MHz |
+| 118.0 MHz | 107.3 MHz | 96.6 MHz (below FM band) |
+| 127.5 MHz | 116.8 MHz | 106.1 MHz (FM broadcast band) |
+| 137.0 MHz | 126.3 MHz | 115.6 MHz (2.4 MHz below airband edge) |
 
-The worst case is 139.4 MHz (for 118 MHz reception), only 2.4 MHz above the filter's upper passband edge. A 3-pole filter with 19 MHz bandwidth provides limited attenuation this close to the passband — approximately 6–10 dB. This is an accepted limitation of the 10.7 MHz IF with high-side injection over a wide tuning range; see ANALYSIS.md for detailed image rejection estimates and the trade-off with low-side injection.
+The worst case is 137 MHz reception, where the image at 115.6 MHz is 2.4 MHz below the filter lower passband edge (~6–10 dB rejection). All other channels have images in or below the FM band with 20–35 dB rejection from the 3-pole RF BPF.
 
 ### Topology — Reused from V1
 
-The V2 RF preselector uses the **identical topology and component values** as the V1 design ("Pi with series resonance"), because L302//C301 resonates at:
+The V2 RF preselector uses the **identical topology and component values** as the V1 design ("Pi with series resonance"). L302//C301 resonates at:
 
 ```
 f = 1 / (2π × √(18 nH × 100 pF)) = 118.7 MHz
 ```
 
-This is exactly the lower edge of the airband, giving naturally shaped bandpass coverage from 118 to ~137 MHz with CT301 trimmer adjustment for peak alignment.
+This places the parallel-resonant tank at the lower airband edge, giving shaped bandpass coverage from 118 to ~137 MHz. CT301 is adjusted after assembly to peak the filter at the desired channel centre.
 
 ```
                   L302 (18 nH)        L303 (18 nH)
@@ -83,34 +80,26 @@ RF_ANT ──[D301]──────────────[C302]────�
                    GND
 ```
 
-CT301 (trimmer) is placed in parallel with the series coupling network to fine-tune the centre frequency after assembly, compensating for inductor tolerances. TP301 provides a 0.5 mm test point at the filter output for signal injection and spectrum analyser probing.
-
-| Ref | Value | Manufacturer | LCSC | Notes |
-|---|---|---|---|---|
-| RF301 | SMA 3 GHz | 皇捷 2LC15SF087 | C22363778 | Through-hole, same as V1 |
-| D301 | ESD 140 V | Littelfuse PESD0402-140 | C10662 | On RF_ANT net |
-| L301 | 47 nH | muRata LQW15AN47NJ00D | C192855 | Series inductor (shunt arm) |
-| L302, L303 | 18 nH | muRata LQW15AN18NJ00D | C82917 | Series inductors; resonates with C301/C303 at 118.7 MHz |
-| C301, C303 | 100 pF | FH 0402CG101J500NT | C1546 | Shunt capacitors |
-| C302 | 3.3 pF | FH 0402CG3R3C500NT | C1565 | Series coupling cap |
-| CT301 | 1.5–3 pF | SEHWA STC3MA03-T1 | C22468119 | Centre frequency trimmer |
-| TP301 | — | — | — | Test point at RF_IN_LNA |
-
-All V1 LCSC part numbers carry over unchanged. The only assembly difference is that CT301 should be adjusted to peak at the desired channel, typically 127–128 MHz (airband centre).
+| Ref | Value | LCSC | Notes |
+|---|---|---|---|
+| RF301 | SMA 3 GHz | C22363778 | Through-hole |
+| D301 | ESD 140 V (PESD0402-140) | C10662 | On RF_ANT net |
+| L301 | 47 nH (LQW15AN47NJ00D) | C192855 | Series inductor (shunt arm) |
+| L302, L303 | 18 nH (LQW15AN18NJ00D) | C82917 | Resonates with C301/C303 at 118.7 MHz |
+| C301, C303 | 100 pF (0402CG101J500NT) | C1546 | Shunt capacitors |
+| C302 | 3.3 pF (0402CG3R3C500NT) | C1565 | Series coupling cap |
+| CT301 | 1.5–3 pF (STC3MA03-T1) | C22468119 | Centre frequency trimmer |
+| TP301 | test point | — | RF_IN_LNA |
 
 **Net names:**
-- `RF_ANT` — SMA RF301 → D301 → filter input
-- `RF_IN_LNA` — filter output → JP401 (LNA bypass) / LNA input / Mixer 1 RF input
+- `RF_ANT` — SMA → D301 → filter input
+- `RF_IN_LNA` — filter output → JP401 (LNA bypass) → LNA or Mixer 1
 
 ---
 
 ## Page 4 — Optional LNA (BGA2869)
 
-### Purpose
-
-Improve system noise figure when operating with a short or lossy antenna. Bypassable via a solder jumper (or 2-position header + jumper cap) so it can be excluded during initial bring-up or strong-signal testing.
-
-### Circuit
+Improves system NF from 22 dB to 5 dB. Bypassable via JP401 for strong-signal environments.
 
 | Ref | Value | Notes |
 |---|---|---|
@@ -118,227 +107,248 @@ Improve system noise figure when operating with a short or lossy antenna. Bypass
 | C401, C402 | 100 nF | VCC decoupling, 0805 |
 | C403 | 100 nF | RF supply decoupling, 0805 |
 | C404, C405 | 220 pF | RF input/output coupling |
-| JP401 | 2-pin solder jumper | Bypass LNA — short = bypass, open = LNA in circuit |
+| JP401 | 2-pin header | Open = LNA in circuit; short = bypass |
 
-The BGA2869 is identical to U401 and U801 in V1. It has no exposed thermal pad (SOT-363). GND pins 2, 4, 5 connect to GND plane with short traces and vias.
-
-**Key specs:**
-- Gain: 31.7 dB at 950 MHz (slightly lower at 130 MHz, consult datasheet Table 3)
-- NF: 3.1 dB
-- Supply: +5 V, ~24 mA typical
-- No external matching components required (internally matched to 50 Ω)
-
-**Note:** If the LNA causes overload from strong local transmitters, install a 3–6 dB resistive attenuator pad between the filter and the LNA input. An attenuator position is included in the signal chain for this purpose.
+GND pins 2, 4, 5 of BGA2869 to GND plane with short traces and vias. No external matching components. See ANALYSIS.md for sensitivity comparison.
 
 ---
 
-## Page 5 — RF Mixer (AD8342 Mixer 1)
+## Page 5 — RF Mixer (AD8342 Mixer 1, U501)
 
-### Purpose
+Down-converts 118–137 MHz RF to 10.7 MHz IF using CLK0 (107.3–126.3 MHz, low-side injection).
 
-Down-convert the 118–137 MHz RF signal to 10.7 MHz IF using the SI5351 CLK0 output as LO1.
+### AD8342 at 5 V — Key Specs
 
-### AD8342 Overview
-
-The AD8342 is an active double-balanced mixer from Analog Devices:
-
-- Supply: 2.7–5.5 V (5 V used here)
-- Supply current: ~55 mA typical at 5 V
-- LO drive: −10 to +3 dBm (very low — compatible with SI5351 direct drive)
-- Conversion gain: ~3.5 dB typical at 5 V
-- IIP3: +24 dBm (5 V supply)
-- RF input: differential (RFIN+/RFIN−), ~200 Ω internally biased
-- IF output: differential current output (IFOP/IFON), requires pull-up load
-- Package: 16-lead LFCSP 3×3 mm (AD8342ACPZ-REEL7, LCSC C182567)
+| Parameter | Value |
+|---|---|
+| Conversion gain (differential) | +3.5 dB typical |
+| SSB NF (differential) | ~10 dB |
+| IIP3 | +24 dBm (5 V supply) |
+| LO drive | −10 to +3 dBm (compatible with SI5351 direct drive) |
+| Supply current | ~55 mA at 5 V |
+| Package | LFCSP-16 3×3 mm (AD8342ACPZ-REEL7, LCSC C182567) |
+| Exposed pad (EP) | GND — connect to GND plane with vias |
 
 ### Single-Ended Connections
 
-The AD8342 is used single-ended in V2 to avoid baluns:
+| Port | Connection |
+|---|---|
+| RFIN+ | Signal via 100 pF AC coupling cap |
+| RFIN− | GND via 100 pF AC coupling cap |
+| LOIP | CLK0 via 100 pF coupling + 22 Ω series resistor |
+| LOIN | GND via 100 pF coupling cap |
+| IFOP | +5 V via R501 (270 Ω) — IF output taken here |
+| IFON | +5 V via R502 (270 Ω) — terminated, not used |
 
-**RF input (single-ended):**
-- RFIN+ connected to signal via 100 pF AC coupling capacitor
-- RFIN− connected to GND via 100 pF AC coupling capacitor
-
-**LO input (single-ended):**
-- LOIP connected to CLK0 via 100 pF coupling + 22 Ω series resistor
-- LOIN connected to GND via 100 pF coupling capacitor
-
-**IF output (single-ended):**
-- IFOP pulled up to +5 V through R501 (270 Ω) — IF signal taken from this node
-- IFON pulled up to +5 V through R502 (270 Ω) — terminated, not used further
-- The differential output current flows through R501/R502; the voltage at IFOP is the single-ended IF output
-
-### Impedance at IF Output
-
-The IFOP node (signal taken here) presents the output as a ~270 Ω Thevenin source driving the 10.7 MHz ceramic filter input. The ceramic filter input impedance is approximately 270–330 Ω, giving a reasonable direct match. A 0–50 Ω series resistor in the IF output path can be used to adjust the loaded Q.
-
-### Circuit Components
+The 270 Ω pull-up at IFOP provides a Thevenin source impedance matching the 10.7 MHz ceramic filter input (~270–330 Ω).
 
 | Ref | Value | Notes |
 |---|---|---|
-| U501 | AD8342 | Active mixer, TSSOP-16 |
-| C501 | 100 pF | RF input coupling (RFIN+) |
-| C502 | 100 pF | RF input AC ground (RFIN−) |
-| C503 | 100 pF | LO coupling (LOIP) |
-| C504 | 100 pF | LO AC ground (LOIN) |
-| C505 | 1 µF | VCC decoupling, 0402 MLCC |
-| C506 | 100 nF | VCC decoupling, 0402 |
+| C501 | 100 pF | RFIN+ coupling |
+| C502 | 100 pF | RFIN− AC ground |
+| C503 | 100 pF | LOIP coupling |
+| C504 | 100 pF | LOIN AC ground |
+| C505 | 1 µF | VCC bulk bypass, 0402 |
+| C506 | 100 nF | VCC HF decoupling, 0402 |
 | R501 | 270 Ω | IFOP pull-up to +5 V |
 | R502 | 270 Ω | IFON pull-up to +5 V (termination) |
-| R503 | 22 Ω | LO series resistor (ringing suppression) |
-| EN501 | — | EN pin tied to +5 V (always enabled) |
+| R503 | 22 Ω | LO series resistor |
 
-**Net names:**
-- `RF_OUT_LNA` — LNA output / Mixer 1 RFIN+ coupling cap input
-- `LO1` — CLK0 output → R503 → LOIP
-- `IF_IN` — IFOP → IF filter input
+**Net names:** `RF_OUT_LNA` → RFIN+; `LO1` → LOIP; `IF1_IN` → IFOP → 10.7 MHz filter
 
 ---
 
-## Page 6 — 10.7 MHz IF Filter
+## Page 6 — 10.7 MHz IF Filter (L601)
 
-Identical to V1 page 6.
+| Ref | Part | LCSC | Notes |
+|---|---|---|---|
+| L601 | HCCF3-10.700-F280IL03A5L | C42392418 | 10.7 MHz ceramic BPF, ~280 kHz BW, 4-pin SMD |
 
-| Ref | Value | Notes |
-|---|---|---|
-| L601 | HCCF3-10.700-F280IL03A5L | 10.7 MHz ceramic BPF, 4-pin, ~280 kHz bandwidth |
+**Pin assignments:** Pin 1 = input (IF1_IN), Pin 2 = GND, Pin 3 = float, Pin 4 = output (IF1_OUT).
 
-The ceramic filter has a nominal input and output impedance of approximately 270–330 Ω. The Mixer 1 IFOP pull-up resistor (R501 = 270 Ω) drives the filter input; the filter output drives the Mixer 2 RF input.
+At this stage the filter provides **image rejection** (attenuates LO leakage and the 10.7 MHz image), not channel selectivity — channel selectivity is handled by the narrower 455 kHz filter downstream.
 
-**Insertion loss:** approximately 3–5 dB typical for HCCF3 series filters.
+**Insertion loss:** typically 3–5 dB. Measure on assembled board.
 
-**Note on 50 Ω filters:** If a 50 Ω IF filter variant is used in a later revision, the AD8342 IF output pull-up resistors and the Mixer 2 RF input coupling must be adjusted accordingly. A 50 Ω filter eliminates the need for resistive matching and is recommended for production.
-
-**Net names:**
-- `IF_IN` — Mixer 1 IFOP → filter pin 1
-- `IF_OUT` — filter pin 4 → Mixer 2 RFIN+
+**Net names:** `IF1_IN` → filter pin 1; `IF1_OUT` → filter pin 4 → Mixer 2 RFIN+
 
 ---
 
-## Page 7 — Product Detector (AD8342 Mixer 2)
+## Page 7 — Second IF Mixer (AD8342 Mixer 2, U701)
 
-### Purpose
+Converts 10.7 MHz first IF to 455 kHz second IF using CLK1 (10.245 MHz).
 
-Synchronous AM demodulation. The 10.7 MHz IF (amplitude modulated) is multiplied by the fixed 10.7 MHz LO2 (CLK1), producing a baseband audio output proportional to the modulating signal.
-
-### AM Product Detection
-
-For an AM signal at 10.7 MHz with modulation m(t):
-
-```
-IF(t) = A × [1 + m(t)] × cos(2π × 10.7 MHz × t + φ_IF)
-LO2(t) = cos(2π × 10.7 MHz × t)
-```
-
-Product = IF × LO2 → after low-pass filtering:
-```
-Audio ≈ (A/2) × [1 + m(t)] × cos(φ_IF)
-```
-
-The audio amplitude depends on cos(φ_IF), the phase difference between LO2 and the received carrier. For a free-running LO2, this phase difference is arbitrary but stable (both derived from the same TCXO). In practice, voice AM reception is fully intelligible with any phase offset — only the amplitude scales, not the waveform.
-
-### Circuit
-
-Identical topology to Mixer 1, but:
-- RF input receives the 10.7 MHz IF signal (not a VHF RF signal)
-- LO input receives CLK1 (10.7 MHz, fixed)
-- IF output carries audio-frequency content (300 Hz – 3 kHz)
+Circuit topology is **identical to Mixer 1** (Page 5) with these differences:
+- RFIN+ receives 10.7 MHz IF signal (from L601 output) via 100 pF coupling
+- LOIP receives CLK1 (10.245 MHz) via 100 pF + 22 Ω
+- IFOP pull-up resistor: R701 = 330 Ω (higher impedance to better match 455 kHz filter input ~1–2 kΩ)
+- IFON pull-up: R702 = 330 Ω (termination)
 
 | Ref | Value | Notes |
 |---|---|---|
-| U701 | AD8342 | Active mixer, TSSOP-16 |
-| C701 | 100 pF | IF input coupling (RFIN+) |
-| C702 | 100 pF | IF input AC ground (RFIN−) |
-| C703 | 100 pF | LO coupling (LOIP) |
-| C704 | 100 pF | LO AC ground (LOIN) |
-| C705 | 1 µF | VCC decoupling, 0402 MLCC |
-| C706 | 100 nF | VCC decoupling, 0402 |
-| R701 | 200 Ω | IFOP pull-up to +5 V (audio output load) |
-| R702 | 200 Ω | IFON pull-up to +5 V (termination) |
+| C701 | 100 pF | RFIN+ coupling |
+| C702 | 100 pF | RFIN− AC ground |
+| C703 | 100 pF | LOIP coupling |
+| C704 | 100 pF | LOIN AC ground |
+| C705 | 1 µF | VCC bulk bypass, 0402 |
+| C706 | 100 nF | VCC HF decoupling, 0402 |
+| R701 | 330 Ω | IFOP pull-up to +5 V |
+| R702 | 330 Ω | IFON pull-up to +5 V (termination) |
 | R703 | 22 Ω | LO series resistor |
 
-**At audio frequencies**, the IF output pull-up value is less critical than at IF. 200 Ω values are used here to set a DC operating point. The audio signal is AC-coupled to the LT6202 input.
-
-**Net names:**
-- `IF_OUT` — IF filter output → Mixer 2 RFIN+
-- `LO2` — CLK1 → R703 → LOIP
-- `AUDIO_RAW` — IFOP → C707 → LT6202 input
+**Net names:** `IF1_OUT` → RFIN+; `LO2` → LOIP; `IF2_IN` → IFOP → 455 kHz filter
 
 ---
 
-## Page 8 — Audio Filter and Gain (LT6202)
+## Page 8 — 455 kHz IF Filter (L901)
 
-**Largely identical to V1 page 11**, with adjusted component values for audio-band filtering.
+| Ref | Part | LCSC | Notes |
+|---|---|---|---|
+| L901 | HCCF2-455.000-LTWCDL | C42392417 | 455 kHz ceramic BPF, ~6–8 kHz BW, 4-pin SMD |
 
-The LT6202 operates in an inverting configuration providing:
-- DC blocking at input (series coupling capacitor C707)
-- Low-pass filtering to limit bandwidth to ~3–4 kHz (voice audio)
-- Voltage gain of approximately 5–6× (~14–16 dB)
+**Pin assignments:** Pin 1 = input (IF2_IN), Pin 2 = output (IF2_OUT), Pin 3/4 = GND.
 
-### Topology
+This filter provides the **channel selectivity**: 6–8 kHz bandwidth passes AM voice (≤4 kHz audio baseband) while rejecting adjacent channels at ±25 kHz spacing by >30 dB.
 
-Single-ended input from Mixer 2 IFOP output (via AC coupling). Single-ended output to PAM8406.
+**Insertion loss:** typically 3–6 dB for HCCF2 series. Measure on assembled board.
 
-The V1 design used the LT6202 in a differential-to-single-ended configuration (to receive the LT5560 differential output). In V2, with a single-ended signal from AD8342, the circuit is simplified to a standard inverting amplifier with low-pass feedback:
+**Impedance:** HCCF2 input/output impedance is typically 1–2 kΩ. Mixer 2 IFOP pull-up (R701 = 330 Ω) drives the filter; the mismatch causes some loss but is acceptable for a prototype. An LC matching network between R701 and L901 can improve insertion loss in a future revision.
+
+**Net names:** `IF2_IN` → filter pin 1; `IF2_OUT` → filter pin 2 → Mixer 3 RFIN+
+
+---
+
+## Page 9 — Product Detector (AD8342 Mixer 3, U1001)
+
+Synchronous AM demodulation at 455 kHz. The 455 kHz IF (amplitude modulated) is multiplied by CLK2 (455 kHz fixed), producing baseband audio.
+
+Circuit topology is **identical to Mixer 1** with these differences:
+- RFIN+ receives 455 kHz IF signal (from L901 output)
+- LOIP receives CLK2 (455 kHz) via 100 pF + 22 Ω
+- IFOP pull-up: R1001 = 200 Ω to +5 V (audio output load)
+- IFON pull-up: R1002 = 200 Ω to +5 V (termination)
+- Output (IFOP) is AC-coupled to the volume control via C1003 (100 nF)
+
+**Product detection note:** CLK2 is a free-running 455 kHz tone from the SI5351. The phase difference between CLK2 and the received carrier is arbitrary but stable (both referenced to the same 26 MHz TCXO). Any phase offset scales the audio amplitude by cos(Δφ) — voice AM is intelligible at any phase.
+
+| Ref | Value | Notes |
+|---|---|---|
+| C1001 | 100 pF | RFIN+ coupling |
+| C1002 | 100 pF | RFIN− AC ground |
+| C1003 | 100 nF | LOIP coupling |
+| C1004 | 100 pF | LOIN AC ground |
+| C1005 | 1 µF | VCC bulk bypass, 0402 |
+| C1006 | 100 nF | VCC HF decoupling, 0402 |
+| C1007 | 100 nF | Audio output AC coupling (IFOP → volume pot) |
+| R1001 | 200 Ω | IFOP pull-up to +5 V |
+| R1002 | 200 Ω | IFON pull-up to +5 V (termination) |
+| R1003 | 22 Ω | LO series resistor |
+
+**Net names:** `IF2_OUT` → RFIN+; `LO3` → LOIP; `AUDIO_RAW` → C1007 → volume pot wiper
+
+---
+
+## Page 10 — Volume Control
+
+A single 10 kΩ logarithmic potentiometer (RV1101) acts as a voltage divider on the audio line between the product detector output and the LT6202 input.
 
 ```
-AUDIO_RAW ──[C707 100nF]──[R1101 5.1kΩ]──┬──[R1102 5.1kΩ]──► AUDIO_OUT
-                                           │
-                                        [U1101 LT6202]
-                                           │
-                            ┌──────────────┘
-                            │
-                         [R1103 + C_feedback]  (low-pass feedback)
+AUDIO_RAW ──[C1007 100nF]── RV1101 pin 1 (top)
+                             RV1101 wiper ── AUDIO_VOL ── R1101 ── LT6202 input
+                             RV1101 pin 3 (bottom) ── GND
 ```
 
 | Ref | Value | Notes |
 |---|---|---|
-| U1101 | LT6202IS5 | High-speed op-amp, SOT-23-5 |
-| C707 | 100 nF | AC input coupling (AUDIO_RAW → R1101) |
-| R1101 | 5.1 kΩ | Input resistor |
-| R1102 | 5.1 kΩ | Gain setting / feedback resistor |
+| RV1101 | 10 kΩ log, TH, 3-pin | Logarithmic taper for natural-feeling volume control |
+
+**Important:** Use a logarithmic (audio) taper pot, not linear. Most standard TH pots from LCSC are available in both; verify taper at time of order.
+
+---
+
+## Page 11 — Audio Filter and Gain (LT6202, U1101)
+
+Inverting amplifier with low-pass feedback. Single-ended input from the volume control wiper.
+
+| Component | Value | Function |
+|---|---|---|
+| R1101 | 200 Ω | Input resistor |
+| R1102 | 5.1 kΩ | Feedback resistor |
+| C1101 | 10 nF | Feedback LP cap — sets −3 dB at ~3.1 kHz |
 | R1103 | 51 Ω | Output series isolator (cap load protection) |
-| C1101 | 100 nF | VCC decoupling |
-| C1102 | 10 nF | Feedback cap in parallel with R1102 (sets −3 dB at ~3.1 kHz) |
-| C1103 | 100 nF | V+ biasing / decoupling |
+| C1102 | 100 nF | VCC decoupling |
+| C1103 | 100 nF | V+ biasing decoupling |
+| C1104 | 4.7 µF | Input AC coupling (if DC blocking needed from pot wiper) |
 
-**Gain calculation:**
+**Gain:**
 ```
-Av = −R1102 / R1101 = −5.1k / 5.1k = −1 (inverting, unity gain)
-```
-
-Adjust R1102 to increase gain if audio level is insufficient. A gain of 5× requires R1102 = 25.5 kΩ. The values above are starting points for bring-up; tune during testing.
-
-**Low-pass −3 dB frequency:**
-```
-f_LP = 1 / (2π × R1102 × C1102) ≈ 1 / (2π × 5.1k × 10n) ≈ 3.1 kHz
+Av = −R1102 / R1101 = −5.1 kΩ / 200 Ω = −25.5 (≈ 28 dB, inverting)
 ```
 
-**Net names:**
-- `AUDIO_RAW` — Mixer 2 IFOP (AC coupled via C707)
-- `AUDIO_OUT` — LT6202 output → C1206 → PAM8406 input
+**Low-pass −3 dB:**
+```
+f_LP = 1 / (2π × R1102 × C1101) ≈ 1 / (2π × 5.1k × 10n) ≈ 3.1 kHz
+```
+
+This matches the V1 op-amp gain configuration exactly, giving consistent audio output levels.
+
+**Net names:** `AUDIO_VOL` → R1101 → LT6202 input; `AUDIO_OUT` → R1103 → C1206 → PAM8406
 
 ---
 
-## Page 9 — Audio Power Amplifier (PAM8406)
+## Page 12 — Audio Power Amplifier + Squelch (PAM8406, U1201)
 
-**Identical to V1 page 12.**
+**PAM8406** is unchanged from V1. The squelch circuit is new — it drives the PAM8406 SHDN# pin (already present in the design) to mute the amplifier when no signal is present.
+
+### Squelch Circuit
+
+A simple two-stage circuit: (1) envelope detector on the LT6202 output, (2) comparator against an adjustable threshold.
+
+```
+AUDIO_OUT ──[D1201 BAT54S]──[R1203 10kΩ]──┬── LM393 IN+ (pin 3)
+                                            │
+                                          [C1207 10µF]
+                                            │
+                                           GND
+
++5V ──[R1204 10kΩ]──┬── LM393 IN− (pin 2)
+                     │
+                   [RV1201 10kΩ pot wiper]
+                     │
+                    GND
+
+LM393 OUT (pin 1) ──[R1205 10kΩ pull-up to +5V_P_AMP]── PAM8406 SHDN#
+```
+
+When audio is present: envelope detector output exceeds threshold → LM393 output goes high → PAM8406 active.
+When no signal: envelope falls below threshold → LM393 output goes low → PAM8406 muted.
+
+The RC time constant (R1203 × C1207 = 10kΩ × 10µF = 100 ms) sets the squelch tail — the amplifier stays active for ~100 ms after a transmission ends to avoid clipping the last syllable.
 
 | Ref | Value | Notes |
 |---|---|---|
-| U1201 | PAM8406DR | Class-D stereo amp, SOIC-16, 2×3 W into 4 Ω |
-| C1206 | 100 nF | Input AC coupling (AUDIO_OUT → PAM8406) |
-| C1202–C1204 | 10 µF | Supply decoupling, 0603 MLCC |
-| C1201, C1205 | 1 nF | Filter capacitors |
-| R1201 | 0 Ω | Gain select (BTL configuration) |
-| R1202 | 10 kΩ | MUTE# / SHDN# pull-up to +5V_P_AMP |
-| P1201 | WJ500V-5.08-2P | Speaker screw terminal, 2-pin |
+| U1151 | LM393DR (SOIC-8) | Dual comparator; one section used for squelch |
+| D1201 | BAT54S (SOT-23) | Dual Schottky envelope detector |
+| RV1201 | 10 kΩ trimmer (TH) | Squelch threshold — adjust once at setup |
+| R1203 | 10 kΩ | Envelope filter resistor |
+| R1204 | 10 kΩ | Threshold upper divider |
+| R1205 | 10 kΩ | LM393 output pull-up to +5V_P_AMP |
+| C1207 | 10 µF | Envelope filter capacitor, 0603 MLCC |
+| C1208 | 100 nF | LM393 VCC decoupling |
 
-The PAM8406 MUTE# and SHDN# pins are pulled high via R1202 to keep the amplifier active. Both pins can be driven low by an external signal (e.g. from a microcontroller) to mute or shut down the amplifier.
+**PAM8406 components (unchanged from earlier V2 description):**
 
-**Net names:**
-- `MUTE` — R1202 pull-up → PAM8406 MUTE# and SHDN#
-- `+5V_P_AMP` — dedicated audio supply rail
+| Ref | Value | Notes |
+|---|---|---|
+| U1201 | PAM8406DR | Class-D stereo amp, SOIC-16 |
+| C1206 | 100 nF | AUDIO_OUT AC coupling |
+| C1202–C1204 | 10 µF | Supply decoupling |
+| C1205 | 1 nF | VDD decoupling |
+| R1201 | 0 Ω | Gain select |
+| R1202 | 10 kΩ | MUTE# pull-up to +5V_P_AMP (MUTE# controlled by squelch) |
+| P1201 | WJ500V-5.08-2P | Speaker screw terminal |
+
+> **Note:** R1202 (MUTE# pull-up) and the LM393 output share the SHDN# net. The LM393 output is open-collector; R1205 pulls it high to +5V_P_AMP. When the LM393 output is low, it overrides R1202, muting the amplifier.
 
 ---
 
@@ -348,28 +358,15 @@ The PAM8406 MUTE# and SHDN# pins are pulled high via R1202 to keep the amplifier
 |---|---|---|---|---|
 | RF BPF | passive | — | RF_ANT | RF_IN_LNA |
 | LNA (optional) | BGA2869 U401 | +5 V | RF_IN_LNA | RF_OUT_LNA |
-| RF Mixer | AD8342 U501 | +5 V | RF_OUT_LNA + LO1 | IF_IN |
-| IF Filter | L601 | — | IF_IN | IF_OUT |
-| Product Detector | AD8342 U701 | +5 V | IF_OUT + LO2 | AUDIO_RAW |
-| Audio gain/LPF | LT6202 U1101 | +5 V | AUDIO_RAW | AUDIO_OUT |
+| RF Mixer | AD8342 U501 | +5 V | RF_OUT_LNA + LO1 | IF1_IN |
+| 10.7 MHz filter | L601 | — | IF1_IN | IF1_OUT |
+| 2nd IF Mixer | AD8342 U701 | +5 V | IF1_OUT + LO2 | IF2_IN |
+| 455 kHz filter | L901 | — | IF2_IN | IF2_OUT |
+| Product Detector | AD8342 U1001 | +5 V | IF2_OUT + LO3 | AUDIO_RAW |
+| Volume control | RV1101 | — | AUDIO_RAW | AUDIO_VOL |
+| Audio gain/LPF | LT6202 U1101 | +5 V | AUDIO_VOL | AUDIO_OUT |
+| Squelch | LM393 U1151 | +5 V | AUDIO_OUT (detect) | PAM8406 SHDN# |
 | Audio power amp | PAM8406 U1201 | +5V_P_AMP | AUDIO_OUT | Speaker |
-
----
-
-## Impedance Summary
-
-| Domain | Impedance | Notes |
-|---|---|---|
-| Antenna / SMA | 50 Ω | Standard coaxial |
-| RF BPF | 50 Ω in/out | Designed for 50 Ω termination |
-| BGA2869 LNA | 50 Ω in/out | Internally matched |
-| AD8342 RFIN | ~200 Ω (differential), ~100 Ω (single-ended) | High-impedance input; mismatch loss from 50 Ω source is ~6 dB — acceptable for prototype |
-| AD8342 IF output | ~270 Ω Thevenin | Set by pull-up resistors R501/R502 |
-| 10.7 MHz ceramic filter | ~270–330 Ω | Resistive match from Mixer 1 output |
-| AD8342 product det. RF input | ~100 Ω single-ended | Driven from ceramic filter output (~330 Ω) — light mismatch |
-| Audio stages | Non-critical | LT6202 drives PAM8406 via AC coupling |
-
-**Important:** Do NOT attempt to force 50 Ω throughout. The AD8342 RF input is high impedance by design. Inserting a 50 Ω shunt pad before the AD8342 would cause ~6 dB additional loss and is unnecessary in a receive-only application.
 
 ---
 
@@ -377,9 +374,10 @@ The PAM8406 MUTE# and SHDN# pins are pulled high via R1202 to keep the amplifier
 
 | Component | Critical note |
 |---|---|
-| U501, U701 (AD8342) | Place VCC decoupling (100 nF + 1 µF) as close as possible to VCC pins. Use vias to GND plane on GND pins. |
-| L601 (IF filter) | Short, direct traces from Mixer 1 output to filter pin 1, and from filter pin 4 to Mixer 2. Minimise stray capacitance. |
-| RF signal path | Use 50 Ω trace width from antenna to LNA output. After the LNA the impedance is no longer 50 Ω — trace width is less critical but keep short. |
-| U401 (BGA2869) | GND pins 2, 4, 5 directly to GND plane with short traces and multiple vias. SOT-363 has no thermal pad. |
-| LO traces | Keep CLK0 and CLK1 traces short and away from IF/audio paths. Add 22 Ω series resistors close to the MS5351M outputs. |
-| Tab pads (U101, U102, U103) | All three regulators: tab = Vout. Isolated polygons on respective supply nets — identical requirement to V1. |
+| U501, U701, U1001 (AD8342) | LFCSP-16: EP = GND, connect to GND plane with vias. Decouple VCC within 1 mm (100 nF + 1 µF). |
+| L601, L901 (IF filters) | Short, direct traces. Keep L901 (455 kHz) away from RF input traces. No 90° bends. |
+| U401 (BGA2869) | GND pins 2, 4, 5 to GND plane. No thermal pad. |
+| U101, U102, U103 | Tab pad = Vout — isolated polygons. Identical to V1. |
+| LO traces (CLK0–CLK2) | Short traces from MS5351M. 22 Ω series resistors close to PLL outputs. Keep LO2 (10.245 MHz) away from IF1 (10.7 MHz) traces — 455 kHz apart, can cause spurious mixing. |
+| RV1101 (volume pot) | Through-hole; place near panel edge for access. |
+| RV1201 (squelch trimmer) | Through-hole trimmer; accessible for one-time calibration. |

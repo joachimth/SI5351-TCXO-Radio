@@ -31,18 +31,20 @@ Unchanged from V1.
 
 ### +5 V Rail (signal chain)
 
-Two scenarios: without LNA (recommended for initial bring-up) and with optional BGA2869 LNA.
+Three AD8342 mixers in V2 final architecture. Two scenarios: without and with optional BGA2869 LNA.
 
 #### Without LNA
 
 | Component | Min (mA) | Typ (mA) | Max (mA) | Source |
 |---|---|---|---|---|
 | AD8342 RF Mixer U501 | 50 | 55 | 60 | AD8342 datasheet (5 V supply) |
-| AD8342 Product Detector U701 | 50 | 55 | 60 | AD8342 datasheet (5 V supply) |
+| AD8342 2nd IF Mixer U701 | 50 | 55 | 60 | AD8342 datasheet |
+| AD8342 Product Detector U1001 | 50 | 55 | 60 | AD8342 datasheet |
 | LT6202 op-amp U1101 | 12 | 14 | 16 | LT6202 datasheet |
-| **Total (no LNA)** | **112** | **124** | **136** | |
+| LM393 comparator U1151 | 0.5 | 1.0 | 2.0 | LM393 datasheet |
+| **Total (no LNA)** | **162.5** | **180** | **198** | |
 
-**Margin:** 136 mA vs 800 mA limit = **83% headroom** ✓
+**Margin:** 198 mA vs 800 mA limit = **75% headroom** ✓
 
 #### With Optional BGA2869 LNA
 
@@ -50,11 +52,13 @@ Two scenarios: without LNA (recommended for initial bring-up) and with optional 
 |---|---|---|---|---|
 | AD8342 RF Mixer U501 | 50 | 55 | 60 | AD8342 datasheet |
 | BGA2869 LNA U401 | 21.8 | 24.0 | 26.0 | BGA2869 datasheet, Table 6 |
-| AD8342 Product Detector U701 | 50 | 55 | 60 | AD8342 datasheet |
+| AD8342 2nd IF Mixer U701 | 50 | 55 | 60 | AD8342 datasheet |
+| AD8342 Product Detector U1001 | 50 | 55 | 60 | AD8342 datasheet |
 | LT6202 op-amp U1101 | 12 | 14 | 16 | LT6202 datasheet |
-| **Total (with LNA)** | **133.8** | **148** | **162** | |
+| LM393 comparator U1151 | 0.5 | 1.0 | 2.0 | LM393 datasheet |
+| **Total (with LNA)** | **184.3** | **204** | **224** | |
 
-**Margin:** 162 mA vs 800 mA limit = **80% headroom** ✓
+**Margin:** 224 mA vs 800 mA limit = **72% headroom** ✓
 
 ### +5V_P_AMP Rail (audio amplifier)
 
@@ -90,10 +94,10 @@ At 9 V DC input and typical loads (with LNA, moderate audio level):
 | Metric | V1 | V2 (no LNA) | V2 (with LNA) |
 |---|---|---|---|
 | +3.3 V typ | 33.7 mA | 31.7 mA | 31.7 mA |
-| +5 V typ | 96.5 mA | 124 mA | 148 mA |
+| +5 V typ | 96.5 mA | 180 mA | 204 mA |
 | +5V_P_AMP | same | same | same |
 
-V2 draws slightly more current on the +5 V rail due to the higher AD8342 supply current (~55 mA each vs ~11.5 mA for LT5560). The simpler design compensates with fewer ICs. Both designs are well within the AMS1117-5.0 800 mA limit.
+V2 now uses three AD8342 mixers — identical count to V1's three LT5560 mixers, but higher current per device (~55 mA vs ~11.5 mA). The absence of baluns, a second LNA, and a second IF amplifier keeps total current at a similar level. Both designs are well within the AMS1117-5.0 800 mA limit.
 
 ---
 
@@ -104,11 +108,11 @@ V2 draws slightly more current on the +5 V rail due to the higher AD8342 supply 
 | Regulator | Vdrop (at 9 V in) | Typ current | Power dissipated |
 |---|---|---|---|
 | AMS1117-3.3 U101 | 5.7 V | 32 mA | 0.18 W |
-| AMS1117-5.0 U103 | 4.0 V | 148 mA (with LNA) | 0.59 W |
+| AMS1117-5.0 U103 | 4.0 V | 204 mA (with LNA) | 0.82 W |
 
-SOT-223 θJA ≈ 50°C/W on a standard PCB. At 0.59 W, junction rise above ambient ≈ 30°C — within the 125°C maximum.
+SOT-223 θJA ≈ 50°C/W on a standard PCB. At 0.82 W, junction rise above ambient ≈ 41°C — within the 125°C maximum.
 
-At 12 V input with 148 mA load, AMS1117-5.0 dissipates (12 − 5) × 0.148 = 1.04 W → junction rise ≈ 52°C. Still within limits but warmer — **prefer 7–9 V input voltage**.
+At 12 V input with 204 mA load, AMS1117-5.0 dissipates (12 − 5) × 0.204 = 1.43 W → junction rise ≈ 71°C. Still within limits but warm — **prefer 7–9 V input voltage**.
 
 **Tab pad note (identical to V1):** SOT-223 tab = Vout on both AMS1117 variants. Isolated copper polygons required on their respective output nets.
 
