@@ -139,8 +139,23 @@ Down-converts 118–137 MHz RF to 10.7 MHz IF using CLK0 (107.3–126.3 MHz, low
 | LOIN | GND via 100 pF coupling cap |
 | IFOP | +5 V via R501 (270 Ω) — IF output taken here |
 | IFON | +5 V via R502 (270 Ω) — terminated, not used |
+| EXRB | R504 (1.82 kΩ) → GND — sets mixer core bias current |
 
 The 270 Ω pull-up at IFOP provides a Thevenin source impedance matching the 10.7 MHz ceramic filter input (~270–330 Ω).
+
+### EXRB Bias Resistor — Critical Note
+
+The AD8342 EXRB pin is internally biased to 1.17 V. An external resistor (R504) from EXRB to GND sets the mixer core bias current:
+
+```
+I_bias = V_EXRB / R_EXRB = 1.17 V / 1820 Ω = 0.643 mA
+```
+
+**Connection: EXRB → R504 (1.82 kΩ) → GND.**
+
+> **WARNING:** Do NOT connect EXRB to VCC (even through a resistor). The AD8342 datasheet states: *"Permanent damage to the device can result if values below 1.8 kΩ are used."* Connecting a supply voltage to EXRB drives excessive current into the pin and irreversibly damages the device.
+
+An optional 100 pF bypass capacitor (C507) in parallel with R504 reduces bias node noise, but is not required.
 
 | Ref | Value | Notes |
 |---|---|---|
@@ -150,9 +165,11 @@ The 270 Ω pull-up at IFOP provides a Thevenin source impedance matching the 10.
 | C504 | 100 pF | LOIN AC ground |
 | C505 | 1 µF | VCC bulk bypass, 0402 |
 | C506 | 100 nF | VCC HF decoupling, 0402 |
+| C507 | 100 pF | EXRB bypass (optional, in parallel with R504) |
 | R501 | 270 Ω | IFOP pull-up to +5 V |
 | R502 | 270 Ω | IFON pull-up to +5 V (termination) |
 | R503 | 22 Ω | LO series resistor |
+| R504 | 1.82 kΩ | EXRB bias — EXRB to GND |
 
 **Net names:** `RF_OUT_LNA` → RFIN+; `LO1` → LOIP; `IF1_IN` → IFOP → 10.7 MHz filter
 
@@ -183,6 +200,7 @@ Circuit topology is **identical to Mixer 1** (Page 5) with these differences:
 - LOIP receives CLK1 (10.245 MHz) via 100 pF + 22 Ω
 - IFOP pull-up resistor: R701 = 330 Ω (higher impedance to better match 455 kHz filter input ~1–2 kΩ)
 - IFON pull-up: R702 = 330 Ω (termination)
+- EXRB: R704 (1.82 kΩ) → GND (same requirement as Mixer 1; see EXRB note on Page 5)
 
 | Ref | Value | Notes |
 |---|---|---|
@@ -192,9 +210,11 @@ Circuit topology is **identical to Mixer 1** (Page 5) with these differences:
 | C704 | 100 pF | LOIN AC ground |
 | C705 | 1 µF | VCC bulk bypass, 0402 |
 | C706 | 100 nF | VCC HF decoupling, 0402 |
+| C707 | 100 pF | EXRB bypass (optional, in parallel with R704) |
 | R701 | 330 Ω | IFOP pull-up to +5 V |
 | R702 | 330 Ω | IFON pull-up to +5 V (termination) |
 | R703 | 22 Ω | LO series resistor |
+| R704 | 1.82 kΩ | EXRB bias — EXRB to GND |
 
 **Net names:** `IF1_OUT` → RFIN+; `LO2` → LOIP; `IF2_IN` → IFOP → 455 kHz filter
 
@@ -227,7 +247,8 @@ Circuit topology is **identical to Mixer 1** with these differences:
 - LOIP receives CLK2 (455 kHz) via 100 pF + 22 Ω
 - IFOP pull-up: R1001 = 200 Ω to +5 V (audio output load)
 - IFON pull-up: R1002 = 200 Ω to +5 V (termination)
-- Output (IFOP) is AC-coupled to the volume control via C1003 (100 nF)
+- Output (IFOP) is AC-coupled to the volume control via C1008 (100 nF)
+- EXRB: R1004 (1.82 kΩ) → GND (same requirement as Mixer 1; see EXRB note on Page 5)
 
 **Product detection note:** CLK2 is a free-running 455 kHz tone from the SI5351. The phase difference between CLK2 and the received carrier is arbitrary but stable (both referenced to the same 26 MHz TCXO). Any phase offset scales the audio amplitude by cos(Δφ) — voice AM is intelligible at any phase.
 
@@ -235,16 +256,18 @@ Circuit topology is **identical to Mixer 1** with these differences:
 |---|---|---|
 | C1001 | 100 pF | RFIN+ coupling |
 | C1002 | 100 pF | RFIN− AC ground |
-| C1003 | 100 nF | LOIP coupling |
+| C1003 | 100 pF | LOIP coupling |
 | C1004 | 100 pF | LOIN AC ground |
 | C1005 | 1 µF | VCC bulk bypass, 0402 |
 | C1006 | 100 nF | VCC HF decoupling, 0402 |
-| C1007 | 100 nF | Audio output AC coupling (IFOP → volume pot) |
+| C1007 | 100 pF | EXRB bypass (optional, in parallel with R1004) |
+| C1008 | 100 nF | Audio output AC coupling (IFOP → volume pot) |
 | R1001 | 200 Ω | IFOP pull-up to +5 V |
 | R1002 | 200 Ω | IFON pull-up to +5 V (termination) |
 | R1003 | 22 Ω | LO series resistor |
+| R1004 | 1.82 kΩ | EXRB bias — EXRB to GND |
 
-**Net names:** `IF2_OUT` → RFIN+; `LO3` → LOIP; `AUDIO_RAW` → C1007 → volume pot wiper
+**Net names:** `IF2_OUT` → RFIN+; `LO3` → LOIP; `AUDIO_RAW` → C1008 → volume pot wiper
 
 ---
 
@@ -253,7 +276,7 @@ Circuit topology is **identical to Mixer 1** with these differences:
 A single 10 kΩ logarithmic potentiometer (RV1101) acts as a voltage divider on the audio line between the product detector output and the LT6202 input.
 
 ```
-AUDIO_RAW ──[C1007 100nF]── RV1101 pin 1 (top)
+AUDIO_RAW ──[C1008 100nF]── RV1101 pin 1 (top)
                              RV1101 wiper ── AUDIO_VOL ── R1101 ── LT6202 input
                              RV1101 pin 3 (bottom) ── GND
 ```
